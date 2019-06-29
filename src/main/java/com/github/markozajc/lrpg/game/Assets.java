@@ -73,6 +73,7 @@ public class Assets {
 	public static final String LOCKED_CHEST_IMAGE = "https://i.postimg.cc/X7c90jJJ/Chest.png";
 	public static final String BACKPACK_IMAGE = "https://i.postimg.cc/Bn1VGw1b/Backpack.png";
 	public static final String RESURRECTION_DEVICE_IMAGE = "https://i.postimg.cc/76R20kXH/resurrection.png";
+	public static final String MANUAL_IMAGE = "https://i.postimg.cc/c44FqSkN/manual.png";
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ARRAYS (private)
