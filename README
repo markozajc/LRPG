@@ -1,3 +1,8 @@
+//////////////////////////////////////////
+                [WARNING]
+//////////////////////////////////////////
+This repository has been modified since the Discord Hack Week deadline. To see the version that was pushed before the end of the event, please visit https://github.com/markozajc/LRPG/tree/291b3e48508fbd2c29223209158803438852d7b2. Do note that the LRPG Bot always uses the latest release and not the Discord Hack Week one.
+
 ========= LRPG =========
 LRPG is a semi-roguelike dungeon crawler bot for Discord. It has been develop as a part of the Discord Hack Week competition and falls under the "entertainment" bot category. If you do not want to build it by hand, you can test it out in its official support server (https://discord.gg/asDUrbR) or invite it to your server using https://discordapp.com/oauth2/authorize?client_id=594167165494624287&scope=bot&permissions=280640.
 
