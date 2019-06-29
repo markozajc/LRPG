@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.markozajc</groupId>
 	<artifactId>lrpg</artifactId>
-	<version>0.1</version>
+	<version>0.1.1</version>
 	<name>LRPG</name>
 	<description>A Discord RPG written using Lithium</description>
 
