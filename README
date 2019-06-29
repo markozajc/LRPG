@@ -9,7 +9,7 @@ LRPG is a semi-roguelike dungeon crawler bot for Discord. It has been developed 
 Building prequisites======
 You need to ensure several things before you can build LRPG
 - You need to have Maven and JDK 11+ installed (this also assumes Maven binaries are in your PATH and JAVA_HOME is set appropriately)
-- You need a Discord bot & token (guide: https://github.com/reactiflux/discord-irc/wiki/Creating-a-discord-bot-&-getting-a-token)
+- You need a Discord bot & token (guide: https://tinyurl.com/y6y9w2at)
 - You need Lithium (repo & install guide: https://github.com/markozajc/Lithium)
 - Your bot needs to be in a resource server (see FAQ)
 
@@ -21,7 +21,7 @@ You can build LRPG using Maven with the following command
 This will create a shaded jar (shaded means it contains all of the dependencies, sometimes also called a "fatjar") in the target directory. You are free to move this jar to any directory of your choice (even on another machine) as it does not rely on anything from your machine anymore. Before you can run it, you also need to create a configuration file. Here's an example
 
 	token=[The token you got from creating a bot application on Discord's developer portal]
-	owner=[Your Discord user ID (https://support.discordapp.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-)]
+	owner=[Your Discord user ID (https://tinyurl.com/dscrd-id)]
 	prefix=[Your bot's prefix]
 	data=[The data directory. This is where the bot will store the player data]
 	
