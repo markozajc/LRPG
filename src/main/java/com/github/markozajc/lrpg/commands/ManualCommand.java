@@ -156,7 +156,7 @@ public class ManualCommand extends Command {
 		return EmbedDialog.setAuthorUser(new EmbedBuilder(), context.getUser())
 				.setColor(Constants.LITHIUM)
 				.setTitle(Assets.MANUAL_EMOTE + " LRPG Manual")
-				.setThumbnail(Assets.SCROLLBOOK_IMAGE)
+				.setThumbnail(Assets.MANUAL_IMAGE)
 				.appendDescription("Welcome to the **LRPG Manual**! Choose a page.")
 				.addField("Pages", Arrays.asList(MANUAL).stream().map(page -> {
 					c.count();
