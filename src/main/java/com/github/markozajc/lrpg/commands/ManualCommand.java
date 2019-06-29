@@ -23,7 +23,7 @@ import com.github.markozajc.lrpg.game.Items.WeaponDatabase;
 
 import net.dv8tion.jda.core.EmbedBuilder;
 
-public class Manual extends Command {
+public class ManualCommand extends Command {
 
 	@Override
 	public void execute(CommandContext context, Parameters params) throws Throwable {
