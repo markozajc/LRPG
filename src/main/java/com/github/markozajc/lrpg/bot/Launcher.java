@@ -20,7 +20,7 @@ import com.github.markozajc.lithium.handlers.CommandHandler;
 import com.github.markozajc.lithium.handlers.ExceptionHandler;
 import com.github.markozajc.lithium.processes.ProcessManager;
 import com.github.markozajc.lrpg.commands.LRpgCommand;
-import com.github.markozajc.lrpg.commands.Manual;
+import com.github.markozajc.lrpg.commands.ManualCommand;
 import com.github.markozajc.lrpg.provider.LRpgProvider;
 
 import net.dv8tion.jda.core.JDABuilder;
@@ -43,7 +43,8 @@ public class Launcher {
 			props.load(is);
 
 			BotConfiguration config = new BotConfiguration(Long.parseLong(props.getProperty("owner")),
-					props.getProperty("prefix"), Arrays.asList(new LRpgCommand(), new Manual()), "LRPG Bot");
+					props.getProperty("prefix"), Arrays.asList(new LRpgCommand(), new ManualCommand()),
+					props.getProperty("name"));
 			JDABuilder builder = new JDABuilder(props.getProperty("token"));
 			PersistentDataConfiguration data = new PersistentDataConfiguration(
 					new FileDataSource(new File(props.getProperty("data"))), Arrays.asList(new LRpgProvider()));
@@ -54,7 +55,8 @@ public class Launcher {
 							.setPresence(OnlineStatus.ONLINE,
 								Game.of(GameType.DEFAULT,
 									l.getConfiguration().getDefaultPrefix() + "lrpg | Adventure awaits!"))),
-					Collections.emptyList(), new ProcessManager(Executors.newFixedThreadPool(20)));
+					Collections.emptyList(),
+					new ProcessManager(Executors.newFixedThreadPool(Integer.parseInt(props.getProperty("poolsize")))));
 		}
 	}
 
