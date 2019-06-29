@@ -28,8 +28,11 @@ class Castle {
 				if (choice == 0) {
 					// Dungeon
 					new BooleanDialog(game.getContext(), Assets.DESCENT_MESSAGE, decision -> {
-						if (decision)
+						if (decision) {
 							Dungeon.displayDungeon(new DungeonInfo(game));
+						} else {
+							displayCastle(game);
+						}
 					}).display(game.getChannel());
 
 				} else if (choice == 1) {
