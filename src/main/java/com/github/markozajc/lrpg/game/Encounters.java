@@ -114,6 +114,7 @@ class Encounters {
 						if (item != null) {
 							// If the chest has an item
 
+							dungeon.getPlayer().getInventory().addItem(item, 1);
 							dungeon.getChannel()
 									.sendMessage(BotUtils.buildEmbed(
 										"You insert the key into the keyhole and open the chest. There's a **"
