@@ -471,8 +471,11 @@ public class Enemies {
 						.sendMessage(Combat.getVictoryStatus(fight.getEnemy(), feed, item == null ? null : item))
 						.queue();
 
-				if (fight.getEnemy().getInfo().isBoss())
-					fight.getPlayer().setLastRegionBoss(fight.getPlayer().getRegion());
+				if (fight.getEnemy().getInfo().isBoss()) {
+					RegionDatabase region = fight.getPlayer().getRegion();
+					fight.getPlayer().setLastRegionBoss(region);
+					Assets.NEXT_REGION_PREPARED.generate(region).display(fight.getChannel());
+				}
 
 				Utilities.sleep(1000);
 				fight.getPlayer().setHp(fight.getPlayer().getHp() + Dungeon.TURN_HEAL);
