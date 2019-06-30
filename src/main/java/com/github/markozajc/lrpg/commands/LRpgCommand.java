@@ -35,7 +35,6 @@ public class LRpgCommand extends Command {
 					context.getLithium().getProcessManager().getProcesses().stream().map(LithiumProcess::getContext))
 				.filter(c -> c instanceof CommandContext)
 				.map(c -> (CommandContext) c)
-				.filter(c -> c.getUser().getIdLong() == context.getUser().getIdLong())
 				.filter(c -> c.getCommand() instanceof LRpgCommand)
 				.filter(c -> !Objects.equals(c, context));
 	}
@@ -48,7 +47,8 @@ public class LRpgCommand extends Command {
 	@Override
 	public void execute(CommandContext context, Parameters params) throws Throwable {
 
-		getSessions(context).map(CommandContext::getChannel)
+		getSessions(context).filter(c -> c.getUser().getIdLong() == context.getUser().getIdLong())
+				.map(CommandContext::getChannel)
 				.findFirst()
 				.ifPresentOrElse(channel -> SESSION_RUNNING.generate(channel).display(context.getChannel()),
 					() -> LRpgExposed.startGame(context));
