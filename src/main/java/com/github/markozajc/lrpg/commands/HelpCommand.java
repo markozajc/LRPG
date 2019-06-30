@@ -14,6 +14,7 @@ import com.github.markozajc.lithium.utilities.dialogs.message.prepared.PreparedE
 import com.github.markozajc.lrpg.bot.Categories;
 
 import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.Permission;
 
 public class HelpCommand extends Command {
 
@@ -22,15 +23,20 @@ public class HelpCommand extends Command {
 					.setColor(Constants.LITHIUM)
 					.setThumbnail(context.getJDA().getSelfUser().getAvatarUrl())
 					.setTitle(context.getLithium().getConfiguration().getName() + "'s command list")
-					.setDescription(
-						context.getLithium()
-								.getCommands()
-								.getRegisteredCommands()
-								.stream()
-								.map(c -> c.getName().toLowerCase())
-								.collect(Collectors.joining(
-									"\n" + context.getLithium().getConfiguration().getDefaultPrefix(),
-									context.getLithium().getConfiguration().getDefaultPrefix(), "")))
+					.setDescription("**[Add " + context.getLithium().getConfiguration().getName() + "]("
+							+ context.getJDA()
+									.asBot()
+									.getInviteUrl(Permission.MESSAGE_EMBED_LINKS, Permission.MESSAGE_WRITE,
+										Permission.MESSAGE_READ, Permission.MESSAGE_ADD_REACTION)
+							+ ")**\n"
+							+ context.getLithium()
+									.getCommands()
+									.getRegisteredCommands()
+									.stream()
+									.map(c -> c.getName().toLowerCase())
+									.collect(Collectors.joining(
+										"\n" + context.getLithium().getConfiguration().getDefaultPrefix(),
+										context.getLithium().getConfiguration().getDefaultPrefix(), "")))
 					.build());
 
 	@Override
