@@ -25,6 +25,7 @@ import com.github.markozajc.lrpg.commands.HelpCommand;
 import com.github.markozajc.lrpg.commands.LRpgCommand;
 import com.github.markozajc.lrpg.commands.ManualCommand;
 import com.github.markozajc.lrpg.commands.PingCommand;
+import com.github.markozajc.lrpg.commands.StatisticsCommand;
 import com.github.markozajc.lrpg.provider.LRpgProvider;
 
 import net.dv8tion.jda.core.JDABuilder;
@@ -35,7 +36,7 @@ import net.dv8tion.jda.core.entities.Game.GameType;
 public class Launcher {
 
 	private static final List<Command> COMMANDS = Arrays.asList(new LRpgCommand(), new ManualCommand(),
-		new HelpCommand(), new PingCommand());
+		new HelpCommand(), new PingCommand(), new StatisticsCommand());
 
 	@SuppressWarnings({
 			"unused", "null"
