@@ -62,7 +62,7 @@ public class Enemies {
 
 		@Override
 		public void turn(FightInfo fight, Consumer<Float> callback) {
-			callback.accept(Combat.hitTurn(this, fight.getPlayerFighter(), fight.getPlayerGuard(), fight));
+			callback.accept(Combat.hitTurn(this, fight.getPlayerFighter(), fight.getPlayerFight().getGuard(), fight));
 		}
 
 		@Override
@@ -227,7 +227,7 @@ public class Enemies {
 				if (this.pump == Assets.GOO_PUMP_REQUIRED + 1 && this.fight != null) {
 					this.pump = 0;
 
-					if (this.fight.getPlayerGuard() >= 3)
+					if (this.fight.getPlayerFight().getGuard() >= Assets.GOO_PUMP_REQUIRED - 1)
 						return Assets.GOO_ATTACK_PUMP_FAIL;
 
 					return Assets.GOO_ATTACK_PUMP;
@@ -245,7 +245,7 @@ public class Enemies {
 				this.pump++;
 
 				if (this.pump == Assets.GOO_PUMP_REQUIRED) {
-					fight.getFeed().append(Assets.GOO_PUMP_TEXT);
+					fight.getPlayerFight().getFeed().append(Assets.GOO_PUMP_TEXT);
 					this.pump++;
 					callback.accept(3f);
 				} else {
@@ -456,36 +456,41 @@ public class Enemies {
 		Combat.fightEnemy(fight, (win, feed) -> {
 			if (win) {
 				Item item = null;
-				ItemRarityPack drop = fight.getEnemy().getInfo().getItemDrops();
+				ItemRarityPack drop = fight.getPlayerFight().getEnemy().getInfo().getItemDrops();
 				if (drop != null && Utilities.getChance(drop.getRarity()))
-					item = drop.maybeGetItem(fight.getPlayer().getReputation());
+					item = drop.maybeGetItem(fight.getPlayerDungeon().getReputation(fight.getPlayer().getXp()));
 
 				if (item != null)
 					fight.getPlayer().getInventory().addItem(item, 1);
 
-				fight.getPlayer().getStatistics().enemySlain();
-				fight.getPlayer().setGold(fight.getPlayer().getGold() + fight.getEnemy().getInfo().getGoldDrop());
-				fight.getPlayer().setXp(fight.getPlayer().getXp() + fight.getEnemy().getInfo().getXpDrop());
+				fight.getPlayerDungeon().getStatistics().enemySlain();
+				fight.getPlayer()
+						.setGold(
+							fight.getPlayer().getGold() + fight.getPlayerFight().getEnemy().getInfo().getGoldDrop());
+				fight.getPlayer()
+						.setXp(fight.getPlayer().getXp() + fight.getPlayerFight().getEnemy().getInfo().getXpDrop());
 
 				fight.getChannel()
-						.sendMessage(Combat.getVictoryStatus(fight.getEnemy(), feed, item == null ? null : item))
+						.sendMessage(Combat.getVictoryStatus(fight.getPlayerFight().getEnemy(), feed,
+							item == null ? null : item))
 						.queue();
 
-				if (fight.getEnemy().getInfo().isBoss()) {
-					RegionDatabase region = fight.getPlayer().getRegion();
-					fight.getPlayer().setLastRegionBoss(region);
+				if (fight.getPlayerFight().getEnemy().getInfo().isBoss()) {
+					RegionDatabase region = fight.getPlayerDungeon().getRegion(fight.getPlayer().getXp());
+					fight.getPlayerDungeon().setLastRegionBoss(region);
 					Assets.NEXT_REGION_PREPARED.generate(region).display(fight.getChannel());
 				}
 
 				Utilities.sleep(1000);
-				fight.getPlayer().setHp(fight.getPlayer().getHp() + Dungeon.TURN_HEAL);
+				fight.getPlayerDungeon()
+						.setHp(fight.getPlayerDungeon().getHp() + Dungeon.TURN_HEAL, fight.getPlayer().getMaxHp());
 
 			} else {
-				fight.getPlayer().setHp(0);
+				fight.getPlayerDungeon().setHp(0, fight.getPlayer().getMaxHp());
 			}
 
-			fight.getPlayer().setFightCurrentEnemy(null);
-			fight.getPlayer().addDungeonStep();
+			fight.getPlayerDungeon().removePlayerFight();
+			fight.getPlayerDungeon().addStep();
 			Dungeon.displayDungeon(new DungeonInfo(fight));
 		});
 	}

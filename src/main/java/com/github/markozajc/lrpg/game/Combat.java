@@ -40,16 +40,16 @@ class Combat {
 		foe.decreaseHp(attack);
 		// Decreases foe's HP
 
-		fight.getFeed()
+		fight.getPlayerFight().getFeed()
 				.append((self.equals(fight.getPlayerFighter()) ? "+ " : "- ") + self.getName() + " attacks "
 						+ foe.getName() + ". ");
 
 		if (attack > 0) {
-			fight.getFeed()
+			fight.getPlayerFight().getFeed()
 					.append(foe.getName() + " loses " + attack + " HP" + (critical ? " [CRITICAL]" : "") + ".\n");
 
 		} else {
-			fight.getFeed().append(foe.getName() + " dodges " + self.getName() + "'s attack.\n");
+			fight.getPlayerFight().getFeed().append(foe.getName() + " dodges " + self.getName() + "'s attack.\n");
 		}
 
 		return self.getSpeed();
@@ -61,16 +61,16 @@ class Combat {
 
 	public static void fightEnemy(@Nonnull FightInfo fight, BiConsumer<Boolean, StringBuilder> callback) {
 		fight.getPlayerFighter().addTime(1f);
-		turnPlayer(fight, fc -> callback.accept(fc.equals(fight.getPlayerFighter()), fight.getFeed()));
+		turnPlayer(fight, fc -> callback.accept(fc.equals(fight.getPlayerFighter()), fight.getPlayerFight().getFeed()));
 	}
 
 	public static void turnPlayer(@Nonnull FightInfo fight, @Nonnull Consumer<FightingCharacter> endCallback) {
-		turnCharacter(fight, fight.getPlayerFighter(), fight.getEnemy(), v -> turnEnemy(fight, endCallback),
+		turnCharacter(fight, fight.getPlayerFighter(), fight.getPlayerFight().getEnemy(), v -> turnEnemy(fight, endCallback),
 			endCallback);
 	}
 
 	public static void turnEnemy(@Nonnull FightInfo fight, @Nonnull Consumer<FightingCharacter> endCallback) {
-		turnCharacter(fight, fight.getEnemy(), fight.getPlayerFighter(), v -> turnPlayer(fight, endCallback),
+		turnCharacter(fight, fight.getPlayerFight().getEnemy(), fight.getPlayerFighter(), v -> turnPlayer(fight, endCallback),
 			endCallback);
 	}
 

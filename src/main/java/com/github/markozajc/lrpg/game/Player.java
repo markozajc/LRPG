@@ -21,52 +21,269 @@ import com.github.markozajc.lrpg.game.Statuses.FightInfo;
 
 public class Player {
 
-	public static class PlayerStatistics {
+	public static long calculateXp(long level) {
+		return level * level * 3;
+	}
 
-		private int enemiesSlain = 0;
-		private int healiesConsumed = 0;
-		private int chestsOpened = 0;
-		private int mysteriousBooksRead = 0;
-		private int itemsPurchased = 0;
+	private long gold;
+	private long xp;
+	@Nonnull
+	private ArmorItem armor;
+	@Nonnull
+	private WeaponItem weapon;
+	@Nonnull
+	private Inventory inventory = new Inventory();
+	private PlayerDungeon playerDungeon;
 
-		public void enemySlain() {
-			this.enemiesSlain++;
+	public Player(long gold, long xp, @Nonnull ArmorItem armor, @Nonnull WeaponItem weapon) {
+		this.gold = gold;
+		this.xp = xp;
+		this.armor = armor;
+		this.weapon = weapon;
+	}
+
+	@Nonnull
+	public ArmorItem getArmor() {
+		return this.armor;
+	}
+
+	public long getXpRequired() {
+		return getNextLevelXp() - getXp();
+	}
+
+	public long getGold() {
+		return this.gold;
+	}
+
+	@Nonnull
+	public Inventory getInventory() {
+		return this.inventory;
+	}
+
+	public int getLevel() {
+		return (int) Math.sqrt(this.xp / 3f);
+	}
+
+	public long getNextLevelXp() {
+		return calculateXp(getLevel() + 1L);
+	}
+
+	@Nonnull
+	public WeaponItem getWeapon() {
+		return this.weapon;
+	}
+
+	public long getXp() {
+		return this.xp;
+	}
+
+	public void setArmor(@Nonnull ArmorItem armor) {
+		this.armor = armor;
+	}
+
+	public void setGold(long gold) {
+		this.gold = gold;
+	}
+
+	public int getMaxHp() {
+		return Utilities.CALCULATE_MAX_HEALTH.applyAsInt(this.getLevel());
+	}
+
+	public void setWeapon(@Nonnull WeaponItem weapon) {
+		this.weapon = weapon;
+	}
+
+	public void setXp(long xp) {
+		this.xp = xp;
+	}
+
+	public PlayerDungeon getPlayerDungeon() {
+		return this.playerDungeon;
+	}
+
+	public void createPlayerDungeon() {
+		if (this.playerDungeon == null)
+			this.playerDungeon = new PlayerDungeon(this.getXp(), this.getMaxHp());
+	}
+
+	public void removePlayerDungeon() {
+		this.playerDungeon = null;
+	}
+
+	public static class PlayerDungeon {
+
+		@Nonnegative
+		private int lastEncounter;
+		@Nonnegative
+		private int step;
+		@Nonnegative
+		private int levelMark;
+		@Nonnull
+		private RegionDatabase lastRegionBossDefeated = RegionDatabase.SEWERS;
+		private int hp;
+		private PlayerFight playerFight;
+		@Nonnull
+		private final PlayerStatistics statistics = new PlayerStatistics();
+		@Nonnegative
+		private final long reputationMark;
+
+		public PlayerDungeon(long xp, int maxHp) {
+			this.reputationMark = xp;
+			this.hp = maxHp;
 		}
 
-		public void healieConsumed() {
-			this.healiesConsumed++;
+		@Nonnull
+		public RegionDatabase getLastRegionBoss() {
+			return this.lastRegionBossDefeated;
 		}
 
-		public void chestOpened() {
-			this.chestsOpened++;
+		public void setLastRegionBoss(@Nonnull RegionDatabase region) {
+			this.lastRegionBossDefeated = region;
 		}
 
-		public void mysteriousBookRead() {
-			this.mysteriousBooksRead++;
+		@Nonnegative
+		public int getStep() {
+			return this.step;
 		}
 
-		public void itemPurchased() {
-			this.itemsPurchased++;
+		@Nonnegative
+		public int addStep() {
+			return this.step++;
 		}
 
-		public int getEnemiesSlain() {
-			return this.enemiesSlain;
+		@Nonnegative
+		public int getLastEncounter() {
+			return this.lastEncounter;
 		}
 
-		public int getHealiesConsumed() {
-			return this.healiesConsumed;
+		@Nonnegative
+		public void resetLastEncounter() {
+			this.lastEncounter = getStep();
 		}
 
-		public int getChestsOpened() {
-			return this.chestsOpened;
+		@Nonnull
+		public PlayerStatistics getStatistics() {
+			return this.statistics;
 		}
 
-		public int getMysteriousBooksRead() {
-			return this.mysteriousBooksRead;
+		public int getLevelMark() {
+			return this.levelMark;
 		}
 
-		public int getItemsPurchased() {
-			return this.itemsPurchased;
+		public void setLevelMark(int level) {
+			this.levelMark = level;
+		}
+
+		public void setHp(int health, int maxHp) {
+			this.hp = Utilities.capAt(health, maxHp);
+		}
+
+		public long getReputation(long xp) {
+			return xp - this.reputationMark;
+		}
+
+		public int getHp() {
+			return this.hp;
+		}
+
+		public RegionDatabase getRegion(long xp) {
+			return Utilities.GET_REGION.apply(getReputation(xp));
+		}
+
+		public PlayerFight getPlayerFight() {
+			return this.playerFight;
+		}
+
+		public void createPlayerFight(@Nonnull Enemy enemy) {
+			if (this.playerFight == null)
+				this.playerFight = new PlayerFight(enemy);
+		}
+
+		public void removePlayerFight() {
+			this.playerFight = null;
+		}
+
+		public static class PlayerFight {
+
+			private int guard = 0;
+			@Nonnull
+			private final Enemy enemy;
+			@Nonnull
+			private final StringBuilder feed;
+
+			public PlayerFight(@Nonnull Enemy enemy) {
+				this.enemy = enemy;
+				this.feed = new StringBuilder();
+			}
+
+			public int getGuard() {
+				return this.guard;
+			}
+
+			@Nonnull
+			public Enemy getEnemy() {
+				return this.enemy;
+			}
+
+			public void setGuard(int guard) {
+				this.guard = guard;
+			}
+
+			@Nonnull
+			public StringBuilder getFeed() {
+				return this.feed;
+			}
+
+		}
+
+		public static class PlayerStatistics {
+
+			private int enemiesSlain = 0;
+			private int healiesConsumed = 0;
+			private int chestsOpened = 0;
+			private int mysteriousBooksRead = 0;
+			private int itemsPurchased = 0;
+
+			public void enemySlain() {
+				this.enemiesSlain++;
+			}
+
+			public void healieConsumed() {
+				this.healiesConsumed++;
+			}
+
+			public void chestOpened() {
+				this.chestsOpened++;
+			}
+
+			public void mysteriousBookRead() {
+				this.mysteriousBooksRead++;
+			}
+
+			public void itemPurchased() {
+				this.itemsPurchased++;
+			}
+
+			public int getEnemiesSlain() {
+				return this.enemiesSlain;
+			}
+
+			public int getHealiesConsumed() {
+				return this.healiesConsumed;
+			}
+
+			public int getChestsOpened() {
+				return this.chestsOpened;
+			}
+
+			public int getMysteriousBooksRead() {
+				return this.mysteriousBooksRead;
+			}
+
+			public int getItemsPurchased() {
+				return this.itemsPurchased;
+			}
+
 		}
 
 	}
@@ -82,14 +299,14 @@ public class Player {
 		}
 
 		public static void guard(FightInfo fight, Consumer<Float> callback) {
-			if (fight.getPlayerGuard() >= Combat.MAX_GUARD) {
+			if (fight.getPlayerFight().getGuard() >= Combat.MAX_GUARD) {
 				Assets.MAX_GUARD_MESSAGE.display(fight.getChannel());
 				Utilities.sleep(1000);
 				callback.accept(0f);
 
 			} else {
-				fight.getFeed().append("+ " + fight.getAuthor().getName() + " raises their guard.\n");
-				fight.setPlayerGuard(fight.getPlayerGuard() + 2);
+				fight.getPlayerFight().getFeed().append("+ " + fight.getAuthor().getName() + " raises their guard.\n");
+				fight.getPlayerFight().setGuard(fight.getPlayerFight().getGuard() + 2);
 				callback.accept(1f);
 			}
 		}
@@ -100,7 +317,7 @@ public class Player {
 				if (item instanceof BattleItem) {
 					// If the item is a BattleItem (has text)
 					Items.useBattleItem((BattleItem) item, fight, feed -> {
-						fight.getFeed().append("+ " + feed + "\n");
+						fight.getPlayerFight().getFeed().append("+ " + feed + "\n");
 						callback.accept(((UsableItem) item).getSpeed());
 					});
 
@@ -108,7 +325,8 @@ public class Player {
 					// If the item is not a BattleItem (doesn't have text)
 					Items.useUsableItem((UsableItem) item, fight, used -> {
 						if (used) {
-							fight.getFeed()
+							fight.getPlayerFight()
+									.getFeed()
 									.append("+ " + fight.getAuthor().getName() + " uses the " + item.getName() + ".\n");
 							callback.accept(((UsableItem) item).getSpeed());
 						} else {
@@ -137,12 +355,12 @@ public class Player {
 
 		@Override
 		public void setHp(int hp) {
-			this.player.setHp(hp);
+			this.player.getPlayerDungeon().setHp(hp, this.player.getMaxHp());
 		}
 
 		@Override
 		public int getHp() {
-			return this.player.getHp();
+			return this.player.getPlayerDungeon().getHp();
 		}
 
 		@Override
@@ -150,8 +368,8 @@ public class Player {
 			new ChoiceDialog(fight.getContext(), Assets.FIGHT_STATUS_PREPARED.generate(fight), choice -> {
 
 				if (choice == 0) {
-					callback.accept(
-						Combat.hitTurn(this, fight.getEnemy(), 0, fight, Math.round(this.player.getLevel() * .1f)));
+					callback.accept(Combat.hitTurn(this, fight.getPlayerFight().getEnemy(), 0, fight,
+						Math.round(this.player.getLevel() * .1f)));
 
 				} else if (choice == 1) {
 					guard(fight, callback);
@@ -181,192 +399,4 @@ public class Player {
 			return this.player.getWeapon().getType().getSpeed();
 		}
 	}
-
-	public static long calculateXp(long level) {
-		return level * level * 3;
-	}
-
-	private long gold;
-	private long xp;
-	@Nonnull
-	private ArmorItem armor;
-	@Nonnull
-	private WeaponItem weapon;
-	@Nonnull
-	private Inventory inventory = new Inventory();
-	private long reputationMark;
-	private int health = -1;
-	@Nonnull
-	private RegionDatabase lastRegionBossDefeated = RegionDatabase.SEWERS;
-	@Nonnull
-	private PlayerStatistics statistics = new PlayerStatistics();
-	private Enemy fightCurrentEnemy;
-	private int fightGuard;
-	private int lastEncounter;
-	private int step;
-	private int levelMark;
-
-	public Player(long gold, long xp, @Nonnull ArmorItem armor, @Nonnull WeaponItem weapon) {
-		this.gold = gold;
-		this.xp = xp;
-		this.armor = armor;
-		this.weapon = weapon;
-		this.reputationMark = xp;
-	}
-
-	@Nonnull
-	public ArmorItem getArmor() {
-		return this.armor;
-	}
-
-	public long getXpRequired() {
-		return getNextLevelXp() - getXp();
-	}
-
-	public long getGold() {
-		return this.gold;
-	}
-
-	public int getHp() {
-		return this.health;
-	}
-
-	@Nonnull
-	public Inventory getInventory() {
-		return this.inventory;
-	}
-
-	public int getLevel() {
-		return (int) Math.sqrt(this.xp / 3f);
-	}
-
-	public long getNextLevelXp() {
-		return calculateXp(getLevel() + 1L);
-	}
-
-	public long getReputation() {
-		return this.getXp() - this.reputationMark;
-	}
-
-	@Nonnull
-	public WeaponItem getWeapon() {
-		return this.weapon;
-	}
-
-	public long getXp() {
-		return this.xp;
-	}
-
-	public void resetReputation() {
-		this.reputationMark = this.getXp();
-	}
-
-	public void setArmor(@Nonnull ArmorItem armor) {
-		this.armor = armor;
-	}
-
-	public void setGold(long gold) {
-		this.gold = gold;
-	}
-
-	public void setHp(int health) {
-		this.health = Utilities.capAt(health, getMaxHp());
-	}
-
-	public int getMaxHp() {
-		return Utilities.CALCULATE_MAX_HEALTH.applyAsInt(this.getLevel());
-	}
-
-	public void setWeapon(@Nonnull WeaponItem weapon) {
-		this.weapon = weapon;
-	}
-
-	public void setXp(long xp) {
-		this.xp = xp;
-	}
-
-	public boolean isInDungeon() {
-		return getHp() != -1;
-	}
-
-	public void setNotInDungeon() {
-		this.health = -1;
-		this.setLastRegionBoss(RegionDatabase.SEWERS);
-		this.resetReputation();
-		this.setFightGuard(0);
-		this.setFightCurrentEnemy(null);
-		this.resetDungeonStep();
-	}
-
-	public void setReputation(long reputation) {
-		this.reputationMark = this.xp - reputation;
-	}
-
-	@Nonnull
-	public RegionDatabase getLastRegionBoss() {
-		return this.lastRegionBossDefeated;
-	}
-
-	public void setLastRegionBoss(@Nonnull RegionDatabase region) {
-		this.lastRegionBossDefeated = region;
-	}
-
-	@Nonnegative
-	public int getDungeonStep() {
-		return this.step;
-	}
-
-	@Nonnegative
-	public int addDungeonStep() {
-		return this.step++;
-	}
-
-	@Nonnegative
-	public void resetDungeonStep() {
-		this.step = 0;
-	}
-
-	@Nonnegative
-	public int getLastEncounter() {
-		return this.lastEncounter;
-	}
-
-	@Nonnegative
-	public void resetLastEncounter() {
-		this.lastEncounter = getDungeonStep();
-	}
-
-	@Nonnull
-	public PlayerStatistics getStatistics() {
-		return this.statistics;
-	}
-
-	public Enemy getFightCurrentEnemy() {
-		return this.fightCurrentEnemy;
-	}
-
-	public int getFightGuard() {
-		return this.fightGuard;
-	}
-
-	public void setFightCurrentEnemy(Enemy fightCurrentEnemy) {
-		this.fightCurrentEnemy = fightCurrentEnemy;
-	}
-
-	public void setFightGuard(int fightGuard) {
-		this.fightGuard = fightGuard;
-	}
-
-	public RegionDatabase getRegion() {
-		return Utilities.GET_REGION.apply(this.getReputation());
-	}
-
-	public int getLevelMark() {
-		return this.levelMark;
-	}
-
-	public void setLevelMark() {
-		this.levelMark = getLevel();
-	}
-
 }

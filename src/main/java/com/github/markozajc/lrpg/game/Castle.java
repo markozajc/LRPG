@@ -20,10 +20,7 @@ class Castle {
 	private Castle() {}
 
 	public static void displayCastle(GameInfo game) {
-		if (game.getPlayer().isInDungeon()) {
-			Dungeon.displayDungeon(new DungeonInfo(game));
-
-		} else {
+		if (game.getPlayer().getPlayerDungeon() == null) {
 			new ChoiceDialog(game.getContext(), Assets.CASTLE_STATUS_PREPARED.generate(game), choice -> {
 				if (choice == 0) {
 					// Dungeon
@@ -76,6 +73,9 @@ class Castle {
 				}
 
 			}, "p", "i", "u", "exit").display(game.getChannel());
+
+		} else {
+			Dungeon.displayDungeon(new DungeonInfo(game));
 		}
 	}
 }

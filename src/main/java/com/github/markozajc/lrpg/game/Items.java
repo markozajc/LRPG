@@ -260,13 +260,14 @@ public class Items {
 
 		@Override
 		default void use(DungeonInfo dungeon, Consumer<Boolean> callback) {
-			if (dungeon.getPlayer().getHp() == dungeon.getPlayer().getMaxHp()) {
+			if (dungeon.getPlayerDungeon().getHp() == dungeon.getPlayer().getMaxHp()) {
 				Assets.HEALIE_NOGAIN_MESSAGE.display(dungeon.getChannel());
 				callback.accept(false);
 
 			} else {
-				dungeon.getPlayer().getStatistics().healieConsumed();
-				dungeon.getPlayer().setHp(dungeon.getPlayer().getHp() + getHealingValue());
+				dungeon.getPlayerDungeon().getStatistics().healieConsumed();
+				dungeon.getPlayerDungeon()
+						.setHp(dungeon.getPlayerDungeon().getHp() + getHealingValue(), dungeon.getPlayer().getMaxHp());
 				Assets.HEALIE_GAIN_PREPARED.generate(getHealingValue()).display(dungeon.getChannel());
 				callback.accept(true);
 			}
@@ -274,13 +275,14 @@ public class Items {
 
 		@Override
 		default void use(FightInfo fight, Consumer<String> callback) {
-			if (fight.getPlayer().getHp() == fight.getPlayer().getMaxHp()) {
+			if (fight.getPlayerDungeon().getHp() == fight.getPlayer().getMaxHp()) {
 				callback.accept(fight.getAuthor().getName() + " consumes a " + getName() + ". It doesn't do much as "
 						+ fight.getAuthor().getName() + " was already at full health.");
 
 			} else {
-				fight.getPlayer().getStatistics().healieConsumed();
-				fight.getPlayer().setHp(fight.getPlayer().getHp() + getHealingValue());
+				fight.getPlayerDungeon().getStatistics().healieConsumed();
+				fight.getPlayerDungeon()
+						.setHp(fight.getPlayerDungeon().getHp() + getHealingValue(), fight.getPlayer().getMaxHp());
 
 				callback.accept(fight.getAuthor().getName() + " consumes a " + getName() + ". "
 						+ fight.getAuthor().getName() + " gained " + getHealingValue() + " HP.");
@@ -354,7 +356,7 @@ public class Items {
 				0, 0.05f, 1, game -> {
 					long xp = game.getPlayer().getXpRequired();
 					game.getPlayer().setXp(game.getPlayer().getXp() + xp);
-					game.getPlayer().resetReputation();
+					Assets.POTION_EXPERIENCE_GAIN_PREPARED.generate(xp).display(game.getChannel());
 					game.getChannel().sendMessage("You gained " + xp + " XP!").queue();
 				});
 
@@ -449,15 +451,16 @@ public class Items {
 		@SuppressWarnings("null")
 		SCROLL_WIPEOUT("Scroll of Wipeout", Assets.SCROLL_WIPEOUT_DESCRIPTION_TEXT,
 				"<:WipeoutScroll:495642000926834698>", 2000, .005f, 1, (fight, callback) -> {
-					if (fight.getEnemy().getInfo().isBoss()) {
+					if (fight.getPlayerFight().getEnemy().getInfo().isBoss()) {
 						callback.accept(fight.getAuthor().getName() + " reads the Scroll of Wipeout. "
-								+ fight.getEnemy().getInfo().getName()
+								+ fight.getPlayerFight().getEnemy().getInfo().getName()
 								+ " seems to be unaffected by it. Maybe you have chosen an enemy that's too strong?");
 					} else {
-						fight.getEnemy().decreaseHp(fight.getEnemy().getHp());
+						fight.getPlayerFight().getEnemy().decreaseHp(fight.getPlayerFight().getEnemy().getHp());
 
 						callback.accept(fight.getAuthor().getName() + " reads the Scroll of Wipeout. "
-								+ fight.getEnemy().getInfo().getName() + " dissolves into a white liquid.");
+								+ fight.getPlayerFight().getEnemy().getInfo().getName()
+								+ " dissolves into a white liquid.");
 					}
 				});
 

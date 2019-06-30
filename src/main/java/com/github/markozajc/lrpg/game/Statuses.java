@@ -5,6 +5,8 @@ import javax.annotation.Nonnull;
 import com.github.markozajc.lithium.Lithium;
 import com.github.markozajc.lithium.processes.context.CommandContext;
 import com.github.markozajc.lrpg.game.Enemies.Enemy;
+import com.github.markozajc.lrpg.game.Player.PlayerDungeon;
+import com.github.markozajc.lrpg.game.Player.PlayerDungeon.PlayerFight;
 import com.github.markozajc.lrpg.game.Player.PlayerFighter;
 import com.github.markozajc.lrpg.provider.LRpgProvider;
 
@@ -90,14 +92,21 @@ public class Statuses {
 
 		public DungeonInfo(@Nonnull GameInfo game) {
 			super(game);
+			this.getPlayer().createPlayerDungeon();
 		}
 
 		public DungeonInfo(@Nonnull DungeonInfo dungeon) {
 			super(dungeon);
+			this.getPlayer().createPlayerDungeon();
 		}
 
 		public DungeonInfo(@Nonnull FightInfo fight) {
 			super(fight);
+			this.getPlayer().createPlayerDungeon();
+		}
+
+		public PlayerDungeon getPlayerDungeon() {
+			return this.getPlayer().getPlayerDungeon();
 		}
 
 	}
@@ -106,49 +115,25 @@ public class Statuses {
 
 		@Nonnull
 		private final PlayerFighter playerFighter;
-		@Nonnull
-		private final StringBuilder feed;
 
 		public FightInfo(@Nonnull DungeonInfo dungeon, @Nonnull Enemy enemy) {
 			super(dungeon);
-
-			this.getPlayer().setFightGuard(0);
-			this.getPlayer().setFightCurrentEnemy(enemy);
+			this.getPlayerDungeon().createPlayerFight(enemy);
 			this.playerFighter = new PlayerFighter(getPlayer(), dungeon);
-			this.feed = new StringBuilder();
 		}
 
 		public FightInfo(@Nonnull DungeonInfo dungeon) {
 			super(dungeon);
-
-			this.getPlayer().setFightGuard(dungeon.getPlayer().getFightGuard());
-			this.getPlayer().setFightCurrentEnemy(dungeon.getPlayer().getFightCurrentEnemy());
 			this.playerFighter = new PlayerFighter(getPlayer(), dungeon);
-			this.feed = new StringBuilder();
-		}
-
-		public int getPlayerGuard() {
-			return this.getPlayer().getFightGuard();
-		}
-
-		public void setPlayerGuard(int playerGuard) {
-			this.getPlayer().setFightGuard(playerGuard);
-		}
-
-		@SuppressWarnings("null")
-		@Nonnull
-		public Enemy getEnemy() {
-			return this.getPlayer().getFightCurrentEnemy();
-		}
-
-		@Nonnull
-		public StringBuilder getFeed() {
-			return this.feed;
 		}
 
 		@Nonnull
 		public PlayerFighter getPlayerFighter() {
 			return this.playerFighter;
+		}
+
+		public PlayerFight getPlayerFight() {
+			return this.getPlayer().getPlayerDungeon().getPlayerFight();
 		}
 
 	}

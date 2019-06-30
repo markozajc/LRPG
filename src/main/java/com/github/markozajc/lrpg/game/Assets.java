@@ -242,34 +242,38 @@ public class Assets {
 					.map(t -> "**" + t.getNameWithEmote() + "**")
 					.collect(Collectors.joining(" and ")) + ".",
 				Constants.GREEN));
-	public static final PreparedDialog<DungeonInfo> DEATH_PREPARED = new PreparedEmbedDialog<>(d -> EmbedDialog
-			.setFooterUser(new EmbedBuilder(), d.getAuthor())
-			.setColor(Constants.RED)
-			.setTitle(Assets.TOMB_EMOTE + " You died..")
-			.addField("Statistics", String.format(DEATH_STATS_FORMAT, Assets.BONES_EMOTE,
-				d.getPlayer().getStatistics().getEnemiesSlain(), d.getPlayer().getStatistics().getHealiesConsumed(),
-				Assets.CHEST_EMOTE, d.getPlayer().getStatistics().getChestsOpened(), Assets.BOOK_EMOTE,
-				d.getPlayer().getStatistics().getMysteriousBooksRead(), Assets.GOLD_EMOTE,
-				d.getPlayer().getStatistics().getItemsPurchased(), Assets.AMULET_EMOTE, d.getPlayer().getReputation()),
-				false)
-			.addField("Gear lost",
-				String.format(DEATH_GEAR_LOST_FORMAT, d.getPlayer().getWeapon().getNameWithEmote(),
-					d.getPlayer().getArmor().getNameWithEmote()),
-				false)
-			.build());
+	public static final PreparedDialog<DungeonInfo> DEATH_PREPARED = new PreparedEmbedDialog<>(
+			d -> EmbedDialog.setFooterUser(new EmbedBuilder(), d.getAuthor())
+					.setColor(Constants.RED)
+					.setTitle(Assets.TOMB_EMOTE + " You died..")
+					.addField("Statistics",
+						String.format(DEATH_STATS_FORMAT, Assets.BONES_EMOTE,
+							d.getPlayerDungeon().getStatistics().getEnemiesSlain(),
+							d.getPlayerDungeon().getStatistics().getHealiesConsumed(), Assets.CHEST_EMOTE,
+							d.getPlayerDungeon().getStatistics().getChestsOpened(), Assets.BOOK_EMOTE,
+							d.getPlayerDungeon().getStatistics().getMysteriousBooksRead(), Assets.GOLD_EMOTE,
+							d.getPlayerDungeon().getStatistics().getItemsPurchased(), Assets.AMULET_EMOTE,
+							d.getPlayerDungeon().getReputation(d.getPlayer().getXp())),
+						false)
+					.addField("Gear lost",
+						String.format(DEATH_GEAR_LOST_FORMAT, d.getPlayer().getWeapon().getNameWithEmote(),
+							d.getPlayer().getArmor().getNameWithEmote()),
+						false)
+					.build());
 	public static final PreparedDialog<RegionDatabase> NEXT_REGION_PREPARED = new PreparedEmbedDialog<>(
 			r -> EmbedDialog.generateEmbed(Assets.UP_EMOTE + " Welcome to the **%s**!", r.getName(), Constants.GREEN));
 	public static final PreparedDialog<DungeonInfo> DUNGEON_STATUS_PREPARED = new PreparedEmbedDialog<>(d -> {
-		RegionDatabase region = d.getPlayer().getRegion();
+		RegionDatabase region = d.getPlayerDungeon().getRegion(d.getPlayer().getXp());
 		EmbedBuilder builder = EmbedDialog.setFooterUser(new EmbedBuilder(), d.getAuthor())
 				.setTitle("You are in the " + region.getName())
 				.setColor(Constants.LITHIUM)
 				.setThumbnail(region.getImageUrl())
 				.addField("Stats",
 					String.format(DUNGEON_STATS_FORMAT, Utilities.getXpBar(d.getPlayer()),
-						Utilities.displayProgress(d.getPlayer().getHp(), d.getPlayer().getMaxHp(), 16),
-						d.getPlayer().getHp(), d.getPlayer().getMaxHp(), d.getPlayer().getReputation(),
-						d.getPlayer().getGold(), Assets.GOLD_EMOTE),
+						Utilities.displayProgress(d.getPlayerDungeon().getHp(), d.getPlayer().getMaxHp(), 16),
+						d.getPlayerDungeon().getHp(), d.getPlayer().getMaxHp(),
+						d.getPlayerDungeon().getReputation(d.getPlayer().getXp()), d.getPlayer().getGold(),
+						Assets.GOLD_EMOTE),
 					true)
 				.addField(Utilities.getGearField(d));
 
@@ -310,7 +314,7 @@ public class Assets {
 	public static final PreparedDialog<Player> UPGRADE_PREPARED = new PreparedEmbedDialog<>(
 			p -> EmbedDialog.generateEmbed(String.format(SCROLL_UPGRADE_FORMAT, p.getWeapon().getEmote(),
 				p.getArmor().getEmote(), Assets.BACK_EMOTE), Constants.NONE));
-	public static final PreparedDialog<Integer> POTION_EXPERIENCE_GAIN_PREPARED = new PreparedEmbedDialog<>(
+	public static final PreparedDialog<Long> POTION_EXPERIENCE_GAIN_PREPARED = new PreparedEmbedDialog<>(
 			xpgain -> EmbedDialog.generateEmbed(UP_EMOTE + " You gained **" + xpgain + "** XP!", Constants.GREEN));
 	public static final PreparedDialog<Integer> HEALIE_GAIN_PREPARED = new PreparedEmbedDialog<>(
 			hpgain -> EmbedDialog.generateEmbed(UP_EMOTE + " You restored **" + hpgain + " HP**.", Constants.GREEN));
@@ -320,8 +324,9 @@ public class Assets {
 				.setTitle(g.getAuthor().getName() + "'s inventory");
 
 		if (g instanceof DungeonInfo)
-			builder.addField("Health", Utilities.displayProgress(g.getPlayer().getHp(), g.getPlayer().getMaxHp(), 20)
-					+ " " + g.getPlayer().getHp() + "/" + g.getPlayer().getMaxHp(),
+			builder.addField("Health",
+				Utilities.displayProgress(((DungeonInfo) g).getPlayerDungeon().getHp(), g.getPlayer().getMaxHp(), 20)
+						+ " " + ((DungeonInfo) g).getPlayerDungeon().getHp() + "/" + g.getPlayer().getMaxHp(),
 				false);
 		// Add health if player is in dungeon
 
@@ -373,26 +378,27 @@ public class Assets {
 	public static final PreparedDialog<FightInfo> FIGHT_STATUS_PREPARED = new PreparedEmbedDialog<>(f -> {
 		EmbedBuilder builder = EmbedDialog.setFooterUser(new EmbedBuilder(), f.getAuthor())
 				.setColor(Constants.NONE)
-				.setThumbnail(f.getEnemy().getInfo().getImageUrl());
+				.setThumbnail(f.getPlayerFight().getEnemy().getInfo().getImageUrl());
 
-		if (f.getEnemy().getInfo().isBoss()) {
-			builder.setTitle(Assets.BOSS_EMOTE + f.getEnemy().getInfo().getName() + " has awoken!");
+		if (f.getPlayerFight().getEnemy().getInfo().isBoss()) {
+			builder.setTitle(Assets.BOSS_EMOTE + f.getPlayerFight().getEnemy().getInfo().getName() + " has awoken!");
 		} else {
-			builder.setTitle("A " + f.getEnemy().getInfo().getName() + " has attacked");
+			builder.setTitle("A " + f.getPlayerFight().getEnemy().getInfo().getName() + " has attacked");
 		}
 		// Adds the appropriate title
 
-		String feedString = Combat.trimFeed(f.getFeed(), 6);
+		String feedString = Combat.trimFeed(f.getPlayerFight().getFeed(), 6);
 		if (feedString.length() > 0)
 			builder.setDescription("```diff\n" + feedString + "```");
 		// Appends the feed if it exists
 
 		builder.addField("HP",
 			String.format(COMBAT_STATS_FORMAT,
-				Utilities.displayProgress(f.getPlayer().getHp(), f.getPlayer().getMaxHp()), f.getPlayer().getHp(),
-				f.getPlayer().getMaxHp(),
-				Utilities.displayProgress(f.getEnemy().getHp(), f.getEnemy().getInfo().getMaxHp()),
-				f.getEnemy().getHp(), f.getEnemy().getInfo().getMaxHp()),
+				Utilities.displayProgress(f.getPlayerDungeon().getHp(), f.getPlayer().getMaxHp()),
+				f.getPlayerDungeon().getHp(), f.getPlayer().getMaxHp(),
+				Utilities.displayProgress(f.getPlayerFight().getEnemy().getHp(),
+					f.getPlayerFight().getEnemy().getInfo().getMaxHp()),
+				f.getPlayerFight().getEnemy().getHp(), f.getPlayerFight().getEnemy().getInfo().getMaxHp()),
 			true)
 				.addField(Utilities.getGearField(f))
 				.addField("Actions", String.format(COMBAT_ACTIONS_FORMAT, f.getPlayer().getWeapon().getEmote(),

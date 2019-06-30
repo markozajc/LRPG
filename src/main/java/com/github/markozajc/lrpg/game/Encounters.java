@@ -29,12 +29,12 @@ class Encounters {
 
 	public enum EncounterType implements ObjectWithReputation {
 		MERCHANT(dungeon -> {
-			Item item = Utilities.getRandomItem(dungeon.getPlayer().getReputation(), 1.5f, Assets.ARMOR_PACK.get(),
-				Assets.WEAPONS_PACK.get(), Assets.HEALIES_PACK);
+			Item item = Utilities.getRandomItem(dungeon.getPlayerDungeon().getReputation(dungeon.getPlayer().getXp()),
+				1.5f, Assets.ARMOR_PACK.get(), Assets.WEAPONS_PACK.get(), Assets.HEALIES_PACK);
 
 			if (item != null) {
-				long price = Utilities.HALF_UP_OR_DOWN_RANDOMIZE
-						.applyAsLong(item.getBasePrice() + dungeon.getPlayer().getReputation() * 5);
+				long price = Utilities.HALF_UP_OR_DOWN_RANDOMIZE.applyAsLong(
+					item.getBasePrice() + dungeon.getPlayerDungeon().getReputation(dungeon.getPlayer().getXp()) * 5);
 
 				MessageDialog dialog = new EmbedDialog(new EmbedBuilder().setColor(Constants.LITHIUM)
 						.setThumbnail(Assets.MERCHANT_IMAGE)
@@ -51,7 +51,7 @@ class Encounters {
 						if (dungeon.getPlayer().getGold() < price) {
 							Assets.NOT_ENOUGH_GOLD_MESSAGE.display(dungeon.getChannel());
 						} else {
-							dungeon.getPlayer().getStatistics().itemPurchased();
+							dungeon.getPlayerDungeon().getStatistics().itemPurchased();
 							dungeon.getPlayer().getInventory().addItem(item, 1);
 							dungeon.getPlayer().setGold(dungeon.getPlayer().getGold() - price);
 							dungeon.getChannel()
@@ -83,7 +83,8 @@ class Encounters {
 											+ "an evil spirit protecting it kicked you out and took away **one half** of your HP.",
 										Constants.RED))
 									.queue();
-							dungeon.getPlayer().setHp(dungeon.getPlayer().getHp() / 2);
+							dungeon.getPlayerDungeon()
+									.setHp(dungeon.getPlayerDungeon().getHp() / 2, dungeon.getPlayer().getMaxHp());
 						}
 					} else {
 						dungeon.getChannel()
@@ -105,9 +106,10 @@ class Encounters {
 
 					if (dungeon.getPlayer().getInventory().removeItem(ItemDatabase.KEY, 1)) {
 						// If the player has a key
-						dungeon.getPlayer().getStatistics().chestOpened();
+						dungeon.getPlayerDungeon().getStatistics().chestOpened();
 
-						Item item = Utilities.getRandomItemWithFallback(dungeon.getPlayer().getReputation(), 2f,
+						Item item = Utilities.getRandomItemWithFallback(
+							dungeon.getPlayerDungeon().getReputation(dungeon.getPlayer().getXp()), 2f,
 							Assets.ALL_NO_RARITY_PACK, Assets.WEAPONS_PACK.get(), Assets.ARMOR_PACK.get(),
 							Assets.HEALIES_PACK);
 
@@ -152,7 +154,8 @@ class Encounters {
 		}),
 
 		LOOT(dungeon -> {
-			Item item = Utilities.getRandomItemWithFallback(dungeon.getPlayer().getReputation(), .8f, Assets.ITEMS_PACK,
+			Item item = Utilities.getRandomItemWithFallback(
+				dungeon.getPlayerDungeon().getReputation(dungeon.getPlayer().getXp()), .8f, Assets.ITEMS_PACK,
 				Assets.HEALIES_PACK);
 
 			if (item != null) {
@@ -182,7 +185,7 @@ class Encounters {
 		SCROLLBOOK(dungeon -> new BooleanDialog(dungeon.getContext(), Assets.SCROLLBOOK_MESSAGE, read -> {
 			if (read) {
 				// If the player says yes
-				dungeon.getPlayer().getStatistics().mysteriousBookRead();
+				dungeon.getPlayerDungeon().getStatistics().mysteriousBookRead();
 
 				if (BotUtils.getRandom().nextBoolean()) {
 					// If the book didn't hurt the player
@@ -222,7 +225,8 @@ class Encounters {
 
 				} else {
 					// If the book hurt the player
-					dungeon.getPlayer().setHp(dungeon.getPlayer().getHp() / 2);
+					dungeon.getPlayerDungeon()
+							.setHp(dungeon.getPlayerDungeon().getHp() / 2, dungeon.getPlayer().getMaxHp());
 					dungeon.getChannel()
 							.sendMessage(BotUtils.buildEmbed(
 								"Reading the contents of the book out loud summoned an evil spirit that took away **one half** of your current health.",
@@ -301,8 +305,9 @@ class Encounters {
 
 		public void display(DungeonInfo dungeon) {
 			this.action.accept(dungeon);
-			dungeon.getPlayer().addDungeonStep();
-			dungeon.getPlayer().setHp(dungeon.getPlayer().getHp() + Dungeon.TURN_HEAL);
+			dungeon.getPlayerDungeon().addStep();
+			dungeon.getPlayerDungeon()
+					.setHp(dungeon.getPlayerDungeon().getHp() + Dungeon.TURN_HEAL, dungeon.getPlayer().getMaxHp());
 		}
 
 	}
@@ -317,10 +322,11 @@ class Encounters {
 	//////////////////////////////////////////////////////////////////////////////////////
 	@Nonnull
 	public static Enemy getRandomEnemy(DungeonInfo dungeon) {
-		return new Enemy(Utilities.getRandomMustMatch(EnemyDatabase.values(),
-			e -> e.getReputation() <= dungeon.getPlayer().getReputation()
-					&& Utilities.GET_REGION.apply(dungeon.getPlayer().getReputation())
-							.equals(Utilities.GET_REGION.apply(e.getReputation()))));
+		return new Enemy(Utilities.getRandomMustMatch(EnemyDatabase.values(), e -> {
+			long reputation = dungeon.getPlayerDungeon().getReputation(dungeon.getPlayer().getXp());
+			return e.getReputation() <= reputation
+					&& Utilities.GET_REGION.apply(reputation).equals(Utilities.GET_REGION.apply(e.getReputation()));
+		}));
 	}
 
 }
