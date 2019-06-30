@@ -57,7 +57,6 @@ public class LRpgExposed {
 
 	public static interface PicturableObject {
 
-		@Nonnull
 		public String getImageUrl();
 
 	}
