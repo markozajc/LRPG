@@ -21,6 +21,25 @@ import net.dv8tion.jda.core.entities.TextChannel;
 
 public class LRpgCommand extends Command {
 
+	public static Stream<CommandContext> getSessions(CommandContext context) {
+		context.getLithium().getEventWaiter().cleanWaiters();
+		return Stream
+				.concat(
+					context.getLithium()
+							.getEventWaiter()
+							.getWaiters()
+							.values()
+							.stream()
+							.flatMap(Set::stream)
+							.map(Waiter::getParentContext),
+					context.getLithium().getProcessManager().getProcesses().stream().map(LithiumProcess::getContext))
+				.filter(c -> c instanceof CommandContext)
+				.map(c -> (CommandContext) c)
+				.filter(c -> c.getUser().getIdLong() == context.getUser().getIdLong())
+				.filter(c -> c.getCommand() instanceof LRpgCommand)
+				.filter(c -> !Objects.equals(c, context));
+	}
+
 	private static final PreparedDialog<TextChannel> SESSION_RUNNING = new PreparedEmbedDialog<>(
 			channel -> EmbedDialog.generateEmbed("You already have a game of LRPG running in " + channel.getAsMention()
 					+ ". Please exit out of it before opening a new session.",
@@ -29,22 +48,7 @@ public class LRpgCommand extends Command {
 	@Override
 	public void execute(CommandContext context, Parameters params) throws Throwable {
 
-		context.getLithium().getEventWaiter().cleanWaiters();
-		Stream.concat(
-			context.getLithium()
-					.getEventWaiter()
-					.getWaiters()
-					.values()
-					.stream()
-					.flatMap(Set::stream)
-					.map(Waiter::getParentContext),
-			context.getLithium().getProcessManager().getProcesses().stream().map(LithiumProcess::getContext))
-				.filter(c -> c instanceof CommandContext)
-				.map(c -> (CommandContext) c)
-				.filter(c -> c.getUser().getIdLong() == context.getUser().getIdLong())
-				.filter(c -> c.getCommand() instanceof LRpgCommand)
-				.filter(c -> !Objects.equals(c, context))
-				.map(CommandContext::getChannel)
+		getSessions(context).map(CommandContext::getChannel)
 				.findFirst()
 				.ifPresentOrElse(channel -> SESSION_RUNNING.generate(channel).display(context.getChannel()),
 					() -> LRpgExposed.startGame(context));
