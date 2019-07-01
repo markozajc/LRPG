@@ -342,7 +342,7 @@ public class Player {
 						}
 					});
 				}
-			}, () -> callback.accept(0f));
+			}, Utilities.FIGHT_PICK, () -> callback.accept(0f));
 		}
 
 		@SuppressWarnings("null")

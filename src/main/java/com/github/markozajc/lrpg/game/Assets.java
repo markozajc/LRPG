@@ -2,8 +2,11 @@ package com.github.markozajc.lrpg.game;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.github.markozajc.lithium.Constants;
 import com.github.markozajc.lithium.processes.context.CommandContext;
@@ -144,7 +147,7 @@ public class Assets {
 			+ "You might be able to use it to resurrect an ancient being by plugging an **** into dedicated hole and inverting the bulbs. "
 			+ "Do you want to do that?\n\nYou have **%s** %s %s**";
 	private static final String SCROLL_UPGRADE_FORMAT = "What to upgrade?%n%s **[W]**eapon%n%s **[A]**rmor%n%s **Exit** upgrade nothing, don't consume the scroll";
-	private static final String INVENTORY_ACTIONS_FORMAT = "%s **[U]**se%n%s **[I]**nfo\n+ Item number%n==OR==%n%s **Exit**\n_(type in the desired action, "
+	private static final String INVENTORY_ACTIONS_FORMAT = "%s **[U]**se _(you can only use **bolded** items)_%n%s **[I]**nfo\n+ Item number%n==OR==%n%s **Exit**\n_(type in the desired action, "
 			+ "for example _`U 1`_ will use the first item on the list)_";
 	private static final String COMBAT_STATS_FORMAT = "You: %s %s/%s%nEnemy: %s %s/%s";
 
@@ -194,8 +197,6 @@ public class Assets {
 						+ " **However,** the mysterious book is unstable and reading it may easily have unwanted consequences."
 						+ "\nDo you want to read it?")
 			.build());
-	public static final MessageDialog ITEM_ONLY_DUNGEON_MESSAGE = new EmbedDialog(
-			EmbedDialog.generateEmbed("You can only use this item when in dungeon!", Constants.RED));
 	public static final MessageDialog ITEM_ONLY_DUNGEON_FIGHT_MESSAGE = new EmbedDialog(
 			EmbedDialog.generateEmbed("You can only use this item in a fight or while in dungeon!", Constants.RED));
 	public static final MessageDialog ITEM_ONLY_FIGHT_MESSAGE = new EmbedDialog(
@@ -318,31 +319,43 @@ public class Assets {
 			xpgain -> EmbedDialog.generateEmbed(UP_EMOTE + " You gained **" + xpgain + "** XP!", Constants.GREEN));
 	public static final PreparedDialog<Integer> HEALIE_GAIN_PREPARED = new PreparedEmbedDialog<>(
 			hpgain -> EmbedDialog.generateEmbed(UP_EMOTE + " You restored **" + hpgain + " HP**.", Constants.GREEN));
-	public static final PreparedDialog<GameInfo> INVENTORY_STATUS_PREPARED = new PreparedEmbedDialog<>(g -> {
-		EmbedBuilder builder = new EmbedBuilder().setColor(Constants.LITHIUM)
-				.setThumbnail(Assets.BACKPACK_IMAGE)
-				.setTitle(g.getAuthor().getName() + "'s inventory");
+	public static final PreparedDialog<Pair<GameInfo, Predicate<Item>>> INVENTORY_STATUS_PREPARED = new PreparedEmbedDialog<>(
+			data -> {
+				EmbedBuilder builder = new EmbedBuilder().setColor(Constants.LITHIUM)
+						.setThumbnail(Assets.BACKPACK_IMAGE)
+						.setAuthor(data.getLeft().getAuthor().getName() + "'s inventory", null,
+							data.getLeft().getAuthor().getEffectiveAvatarUrl());
 
-		if (g instanceof DungeonInfo)
-			builder.addField("Health",
-				Utilities.displayProgress(((DungeonInfo) g).getPlayerDungeon().getHp(), g.getPlayer().getMaxHp(), 20)
-						+ " " + ((DungeonInfo) g).getPlayerDungeon().getHp() + "/" + g.getPlayer().getMaxHp(),
-				false);
-		// Add health if player is in dungeon
+				if (data.getLeft() instanceof DungeonInfo)
+					builder.addField("Health",
+						Utilities.displayProgress(((DungeonInfo) data.getLeft()).getPlayerDungeon().getHp(),
+							data.getLeft().getPlayer().getMaxHp(), 20) + " "
+								+ ((DungeonInfo) data.getLeft()).getPlayerDungeon().getHp() + "/"
+								+ data.getLeft().getPlayer().getMaxHp(),
+						false);
+				// Add health if player is in dungeon
 
-		Counter c = new Counter(0);
-		builder.addField("Inventory", g.getPlayer().getInventory().getItems().stream().map(is -> {
-			c.count();
-			return "**" + c.getCount() + "** - " + is.getQuantity() + "x " + is.getItem().getNameWithEmote();
-		}).collect(Collectors.joining("\n")), false);
-		// Add a list of items
+				Counter c = new Counter(0);
+				builder.addField("Inventory", data.getLeft().getPlayer().getInventory().getItems().stream().map(is -> {
+					c.count();
+					String itemDisplay = "**" + c.getCount() + "** - " + is.getQuantity() + "x ";
+					if (data.getRight().test(is.getItem())) {
+						itemDisplay += "**" + is.getItem().getNameWithEmote() + "**";
+					} else {
+						itemDisplay += is.getItem().getNameWithEmote();
+					}
+					return itemDisplay;
+					// Bolds the items you can use
+				}).collect(Collectors.joining("\n")), false);
+				// Add a list of items
 
-		builder.addField("Actions",
-			String.format(INVENTORY_ACTIONS_FORMAT, Assets.GO_EMOTE, Assets.QUESTION_EMOTE, Assets.BACK_EMOTE), false);
-		// Add a list of actions
+				builder.addField("Actions",
+					String.format(INVENTORY_ACTIONS_FORMAT, Assets.GO_EMOTE, Assets.QUESTION_EMOTE, Assets.BACK_EMOTE),
+					false);
+				// Add a list of actions
 
-		return builder.build();
-	});
+				return builder.build();
+			});
 	public static final PreparedDialog<Integer> INVENTORY_INDEX_NOT_FOUND = new PreparedEmbedDialog<>(
 			index -> EmbedDialog.generateEmbed(
 				"Item number **" + (index + 1) + "** has not been found in your inventory.", Constants.RED));
@@ -374,7 +387,7 @@ public class Assets {
 		return builder.build();
 	});
 	public static final PreparedDialog<Item> ITEM_CANT_USE_PREPARED = new PreparedEmbedDialog<>(item -> EmbedDialog
-			.generateEmbed("You can not use the **" + item.getNameWithEmote() + "** right now.", Constants.NONE));
+			.generateEmbed("**" + item.getNameWithEmote() + "** has no apparent use by itself.", Constants.NONE));
 	public static final PreparedDialog<FightInfo> FIGHT_STATUS_PREPARED = new PreparedEmbedDialog<>(f -> {
 		EmbedBuilder builder = EmbedDialog.setFooterUser(new EmbedBuilder(), f.getAuthor())
 				.setColor(Constants.NONE)
@@ -414,6 +427,9 @@ public class Assets {
 					.setDescription(String.format(FIRST_LAUNCH_FORMAT, Assets.MANUAL_EMOTE,
 						c.getLithium().getConfiguration().getDefaultPrefix(), Assets.GOLD_EMOTE))
 					.build());
+	public static final PreparedDialog<Item> ITEM_ONLY_DUNGEON_PREPARED = new PreparedEmbedDialog<>(
+			item -> EmbedDialog.generateEmbed(
+				"You can only use the **" + item.getNameWithEmote() + "** when in the dungeon!", Constants.RED));
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EXCEPTIONS "EXCEPTION"

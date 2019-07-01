@@ -89,7 +89,7 @@ public class Dungeon {
 
 				} else if (c == 1) {
 					// Inventory
-					Items.openInventoryRepeating(dungeon, () -> displayDungeon(dungeon));
+					Items.openInventoryRepeating(dungeon, Utilities.DUNGEON_PICK, () -> displayDungeon(dungeon));
 
 				} else if (c == 2) {
 					// Return to castle

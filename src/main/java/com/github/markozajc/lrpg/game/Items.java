@@ -14,10 +14,13 @@ import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.github.markozajc.lithium.Constants;
 import com.github.markozajc.lithium.commands.exceptions.runtime.NumberOverflowException;
 import com.github.markozajc.lithium.utilities.BotUtils;
 import com.github.markozajc.lithium.utilities.Parser;
+import com.github.markozajc.lithium.utilities.dialogs.message.MessageDialog;
 import com.github.markozajc.lithium.utilities.dialogs.waiter.ChoiceDialog;
 import com.github.markozajc.lithium.utilities.dialogs.waiter.EventWaiterDialog;
 import com.github.markozajc.lrpg.game.Enemies.RegionDatabase;
@@ -51,6 +54,10 @@ public class Items {
 
 		public default long getBasePrice() {
 			return Math.round((1f - getRarity()) * 100f) + 10 + getReputation();
+		}
+
+		public default MessageDialog getForbiddenUsageDialog() {
+			return Assets.ITEM_CANT_USE_PREPARED.generate(this);
 		}
 
 	}
@@ -122,7 +129,7 @@ public class Items {
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////
-	// CONSUMABLE
+	// CONSUMABLE / USABLE
 	//////////////////////////////////////////////////////////////////////////////////////
 
 	public static interface UsableItem extends Item, ObjectWithSpeed {
@@ -140,8 +147,13 @@ public class Items {
 			if (game instanceof DungeonInfo)
 				use((DungeonInfo) game, callback);
 
-			Assets.ITEM_ONLY_DUNGEON_MESSAGE.display(game.getChannel());
+			getForbiddenUsageDialog().display(game.getChannel());
 			callback.accept(false);
+		}
+
+		@Override
+		default MessageDialog getForbiddenUsageDialog() {
+			return Assets.ITEM_ONLY_DUNGEON_PREPARED.generate(this);
 		}
 
 	}
@@ -210,7 +222,7 @@ public class Items {
 		@Override
 		public final void use(GameInfo game, Consumer<Boolean> callback) {
 			if (game instanceof DungeonInfo) {
-				Assets.GEAR_CANT_EQUIP_MESSAGE.display(game.getChannel());
+				getForbiddenUsageDialog().display(game.getChannel());
 				callback.accept(false);
 			} else {
 				equip(game);
@@ -230,6 +242,11 @@ public class Items {
 			return RARITY;
 		}
 
+		@Override
+		public MessageDialog getForbiddenUsageDialog() {
+			return Assets.GEAR_CANT_EQUIP_MESSAGE;
+		}
+
 	}
 
 	public static interface BattleItem extends DungeonItem {
@@ -241,9 +258,14 @@ public class Items {
 			if (game instanceof DungeonInfo) {
 				use((DungeonInfo) game, callback);
 			} else {
-				Assets.ITEM_ONLY_DUNGEON_FIGHT_MESSAGE.display(game.getChannel());
+				getForbiddenUsageDialog().display(game.getChannel());
 				callback.accept(false);
 			}
+		}
+
+		@Override
+		default MessageDialog getForbiddenUsageDialog() {
+			return Assets.ITEM_ONLY_DUNGEON_FIGHT_MESSAGE;
 		}
 
 	}
@@ -1072,7 +1094,7 @@ public class Items {
 
 	}
 
-	public static void openInventory(GameInfo game, Consumer<Item> itemPicked, Runnable exit) {
+	public static void openInventory(GameInfo game, Consumer<Item> itemPicked, Predicate<Item> canPick, Runnable exit) {
 		new InventoryChoiceDialog(game, (act, stack) -> {
 			if (act.equals(InventoryAction.EXIT)) {
 				exit.run();
@@ -1080,12 +1102,12 @@ public class Items {
 			} else if (act.equals(InventoryAction.USE)) {
 				itemPicked.accept(stack.getItem());
 			}
-		}).display(game.getChannel());
+		}, canPick).display(game.getChannel());
 	}
 
-	public static void openInventoryRepeating(GameInfo game, Runnable exit) {
-		openInventory(game,
-			item -> Items.useUsableItem((UsableItem) item, game, u -> openInventoryRepeating(game, exit)), exit);
+	public static void openInventoryRepeating(GameInfo game, Predicate<Item> canPick, Runnable exit) {
+		openInventory(game, item -> Items.useUsableItem((UsableItem) item, game,
+			u -> openInventoryRepeating(game, canPick.and(Utilities.NO_UNUSABLE_ITEMS), exit)), canPick, exit);
 	}
 
 	public static class InventoryChoiceDialog extends EventWaiterDialog<MessageReceivedEvent> {
@@ -1109,9 +1131,10 @@ public class Items {
 		private final Predicate<MessageReceivedEvent> isRight;
 		private final long userId;
 
-		public InventoryChoiceDialog(GameInfo game, BiConsumer<InventoryAction, ItemStack> action) {
-			super(game.getContext(), MessageReceivedEvent.class, Assets.INVENTORY_STATUS_PREPARED.generate(game),
-					event -> {
+		public InventoryChoiceDialog(GameInfo game, BiConsumer<InventoryAction, ItemStack> action,
+				Predicate<Item> isAllowed) {
+			super(game.getContext(), MessageReceivedEvent.class,
+					Assets.INVENTORY_STATUS_PREPARED.generate(Pair.of(game, isAllowed)), event -> {
 						String message = event.getMessage().getContentRaw().toLowerCase();
 						if (message.equals(InventoryAction.EXIT.getKeyword())) {
 							action.accept(InventoryAction.EXIT, null);
@@ -1131,7 +1154,7 @@ public class Items {
 
 						action.accept(InventoryAction.USE, item);
 					});
-			this.isRight = getIsRight(game);
+			this.isRight = getIsRight(game, isAllowed);
 			this.userId = game.getAuthor().getIdLong();
 		}
 
@@ -1141,7 +1164,7 @@ public class Items {
 			return this.getMessageDialog().display(channel);
 		}
 
-		private static Predicate<MessageReceivedEvent> getIsRight(GameInfo game) {
+		private static Predicate<MessageReceivedEvent> getIsRight(GameInfo game, Predicate<Item> isAllowed) {
 			return event -> {
 				if (event.getChannel().getIdLong() != game.getChannel().getIdLong()
 						|| event.getAuthor().getIdLong() != game.getAuthor().getIdLong())
@@ -1152,6 +1175,7 @@ public class Items {
 				if (message.startsWith(InventoryAction.USE.getKeyword()) || message.startsWith("i")) {
 					// If the message invokes an action
 					String[] actionString = message.split(" ");
+
 					int i;
 					try {
 						i = Parser.parseInt(actionString[1]) - 1;
@@ -1184,9 +1208,8 @@ public class Items {
 						return false;
 					}
 
-					if (message.startsWith(InventoryAction.USE.getKeyword())
-							&& !(item.getItem() instanceof UsableItem)) {
-						Assets.ITEM_CANT_USE_PREPARED.generate(item.getItem()).display(game.getChannel());
+					if (!isAllowed.test(item.getItem())) {
+						item.getItem().getForbiddenUsageDialog().display(event.getChannel());
 						return false;
 					}
 

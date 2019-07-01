@@ -34,7 +34,7 @@ class Castle {
 
 				} else if (choice == 1) {
 					// Inventory
-					Items.openInventoryRepeating(game, () -> displayCastle(game));
+					Items.openInventoryRepeating(game, Utilities.CASTLE_PICK, () -> displayCastle(game));
 
 				} else if (choice == 2) {
 					// Unequip all
