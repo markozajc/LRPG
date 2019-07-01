@@ -299,11 +299,11 @@ public class Player {
 	public static class PlayerFighter extends FightingCharacter {
 
 		private final Player player;
-		private final FightInfo dungeon;
+		private final FightInfo fight;
 
 		public PlayerFighter(Player player, FightInfo fight) {
 			this.player = player;
-			this.dungeon = fight;
+			this.fight = fight;
 		}
 
 		public static void guard(FightInfo fight, Consumer<Float> callback) {
@@ -348,7 +348,7 @@ public class Player {
 		@SuppressWarnings("null")
 		@Override
 		public String getName() {
-			return this.dungeon.getAuthor().getName();
+			return this.fight.getAuthor().getName();
 		}
 
 		@Override
@@ -406,5 +406,16 @@ public class Player {
 		public float getSpeed() {
 			return this.player.getWeapon().getType().getSpeed();
 		}
+
+		@Override
+		public float getTime() {
+			return this.fight.getPlayerFight().getPlayerTime();
+		}
+
+		@Override
+		public void setTime(float time) {
+			this.fight.getPlayerFight().setPlayerTime(time);
+		}
+
 	}
 }
