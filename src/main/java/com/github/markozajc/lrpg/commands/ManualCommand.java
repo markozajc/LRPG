@@ -121,7 +121,7 @@ public class ManualCommand extends Command {
 			new ManualPage(Assets.INVENTORY_EMOTE + " Inventory", "https://i.postimg.cc/sDf9S1BN/03-inventory.png",
 					context -> "Your inventory is where your collected items go. You can open it up with the letter \"I\" in most dialogs. "
 							+ "Your inventory is presented as a list of numbered items - to use one (drink, eat, equip, read, ...), just type in \"U <item's number>\" "
-							+ "(for example \"U 1\" - **mind the space between `U` and `1`!**). "
+							+ "(for example \"U 1\". \"U1\" will also work). "
 							+ "If you aren't sure what an item does, you can type in \"I <item number>\" (I here stands for \"information\")."),
 			new ManualPage(ArmorDatabase.HERO.getEmote() + " Gear", "https://i.postimg.cc/D0nQxwxm/04-gear.png",
 					context -> "Your gear will help you win battles and not die while exploring. "

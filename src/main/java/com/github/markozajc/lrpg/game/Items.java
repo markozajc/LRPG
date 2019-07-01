@@ -1174,9 +1174,9 @@ public class Items {
 				String message = event.getMessage().getContentDisplay().toLowerCase();
 				if (message.startsWith(InventoryAction.USE.getKeyword()) || message.startsWith("i")) {
 					// If the message invokes an action
-					String[] actionString = message.split(" ");
+					String[] actionString = message.replace(" ", "").split("", 2);
 
-					if (actionString.length != 2) {
+					if (actionString.length < 2) {
 						// Too many/little arguments
 						Assets.INVENTORY_INVALID_CHOICE_MESSAGE.display(game.getChannel());
 						return false;
