@@ -115,16 +115,21 @@ public class Statuses {
 
 		@Nonnull
 		private final PlayerFighter playerFighter;
+		private final boolean resumed;
 
 		public FightInfo(@Nonnull DungeonInfo dungeon, @Nonnull Enemy enemy) {
-			super(dungeon);
+			this(dungeon, false);
 			this.getPlayerDungeon().createPlayerFight(enemy);
-			this.playerFighter = new PlayerFighter(getPlayer(), dungeon);
 		}
 
 		public FightInfo(@Nonnull DungeonInfo dungeon) {
+			this(dungeon, true);
+		}
+
+		private FightInfo(@Nonnull DungeonInfo dungeon, boolean resumed) {
 			super(dungeon);
 			this.playerFighter = new PlayerFighter(getPlayer(), dungeon);
+			this.resumed = resumed;
 		}
 
 		@Nonnull
@@ -134,6 +139,10 @@ public class Statuses {
 
 		public PlayerFight getPlayerFight() {
 			return this.getPlayer().getPlayerDungeon().getPlayerFight();
+		}
+
+		public boolean isResumed() {
+			return this.resumed;
 		}
 
 	}
