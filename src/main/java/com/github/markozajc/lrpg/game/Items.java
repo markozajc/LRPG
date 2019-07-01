@@ -1141,7 +1141,7 @@ public class Items {
 							return;
 						}
 
-						String[] actionString = message.split(" ");
+						String[] actionString = message.replace(" ", "").split("", 2);
 						ItemStack item = game.getPlayer()
 								.getInventory()
 								.getItems()
