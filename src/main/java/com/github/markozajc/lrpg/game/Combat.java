@@ -62,7 +62,7 @@ class Combat {
 	}
 
 	public static void fightEnemy(@Nonnull FightInfo fight, BiConsumer<Boolean, StringBuilder> callback) {
-		if (fight.isResumed())
+		if (!fight.isResumed())
 			fight.getPlayerFighter().addTime(1f);
 		turnPlayer(fight, fc -> callback.accept(fc.equals(fight.getPlayerFighter()), fight.getPlayerFight().getFeed()));
 	}
