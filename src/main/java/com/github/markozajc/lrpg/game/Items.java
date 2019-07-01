@@ -1176,6 +1176,12 @@ public class Items {
 					// If the message invokes an action
 					String[] actionString = message.split(" ");
 
+					if (actionString.length != 2) {
+						// Too many/little arguments
+						Assets.INVENTORY_INVALID_CHOICE_MESSAGE.display(game.getChannel());
+						return false;
+					}
+
 					int i;
 					try {
 						i = Parser.parseInt(actionString[1]) - 1;
