@@ -40,12 +40,14 @@ class Combat {
 		foe.decreaseHp(attack);
 		// Decreases foe's HP
 
-		fight.getPlayerFight().getFeed()
+		fight.getPlayerFight()
+				.getFeed()
 				.append((self.equals(fight.getPlayerFighter()) ? "+ " : "- ") + self.getName() + " attacks "
 						+ foe.getName() + ". ");
 
 		if (attack > 0) {
-			fight.getPlayerFight().getFeed()
+			fight.getPlayerFight()
+					.getFeed()
 					.append(foe.getName() + " loses " + attack + " HP" + (critical ? " [CRITICAL]" : "") + ".\n");
 
 		} else {
@@ -60,18 +62,19 @@ class Combat {
 	}
 
 	public static void fightEnemy(@Nonnull FightInfo fight, BiConsumer<Boolean, StringBuilder> callback) {
-		fight.getPlayerFighter().addTime(1f);
+		if (fight.isResumed())
+			fight.getPlayerFighter().addTime(1f);
 		turnPlayer(fight, fc -> callback.accept(fc.equals(fight.getPlayerFighter()), fight.getPlayerFight().getFeed()));
 	}
 
 	public static void turnPlayer(@Nonnull FightInfo fight, @Nonnull Consumer<FightingCharacter> endCallback) {
-		turnCharacter(fight, fight.getPlayerFighter(), fight.getPlayerFight().getEnemy(), v -> turnEnemy(fight, endCallback),
-			endCallback);
+		turnCharacter(fight, fight.getPlayerFighter(), fight.getPlayerFight().getEnemy(),
+			v -> turnEnemy(fight, endCallback), endCallback);
 	}
 
 	public static void turnEnemy(@Nonnull FightInfo fight, @Nonnull Consumer<FightingCharacter> endCallback) {
-		turnCharacter(fight, fight.getPlayerFight().getEnemy(), fight.getPlayerFighter(), v -> turnPlayer(fight, endCallback),
-			endCallback);
+		turnCharacter(fight, fight.getPlayerFight().getEnemy(), fight.getPlayerFighter(),
+			v -> turnPlayer(fight, endCallback), endCallback);
 	}
 
 	public static void turnCharacter(@Nonnull FightInfo fight, @Nonnull FightingCharacter self, @Nonnull FightingCharacter foe, @Nonnull Consumer<Void> callback, @Nonnull Consumer<FightingCharacter> endCallback) {
@@ -166,18 +169,17 @@ class Combat {
 			return this.time;
 		}
 
-		public void addTime(float time) {
-			this.time += time;
-		}
-
-		public void takeTime(float time) {
-			this.time -= time;
-		}
-
 		public void setTime(float time) {
 			this.time = time;
 		}
 
+		public final void addTime(float time) {
+			setTime(getTime() + time);
+		}
+
+		public final void takeTime(float time) {
+			setTime(getTime() - time);
+		}
 	}
 
 }
