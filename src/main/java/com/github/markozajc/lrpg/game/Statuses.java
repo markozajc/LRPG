@@ -128,7 +128,7 @@ public class Statuses {
 
 		private FightInfo(@Nonnull DungeonInfo dungeon, boolean resumed) {
 			super(dungeon);
-			this.playerFighter = new PlayerFighter(getPlayer(), dungeon);
+			this.playerFighter = new PlayerFighter(getPlayer(), this);
 			this.resumed = resumed;
 		}
 

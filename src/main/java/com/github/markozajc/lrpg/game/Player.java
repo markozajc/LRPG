@@ -16,7 +16,6 @@ import com.github.markozajc.lrpg.game.Items.Inventory;
 import com.github.markozajc.lrpg.game.Items.UsableItem;
 import com.github.markozajc.lrpg.game.Items.WeaponItem;
 import com.github.markozajc.lrpg.game.LRpgExposed.RangedValueObject;
-import com.github.markozajc.lrpg.game.Statuses.DungeonInfo;
 import com.github.markozajc.lrpg.game.Statuses.FightInfo;
 
 public class Player {
@@ -210,6 +209,7 @@ public class Player {
 			private final Enemy enemy;
 			@Nonnull
 			private final StringBuilder feed;
+			private float playerTime;
 
 			public PlayerFight(@Nonnull Enemy enemy) {
 				this.enemy = enemy;
@@ -232,6 +232,14 @@ public class Player {
 			@Nonnull
 			public StringBuilder getFeed() {
 				return this.feed;
+			}
+
+			public float getPlayerTime() {
+				return this.playerTime;
+			}
+
+			public void setPlayerTime(float playerTime) {
+				this.playerTime = playerTime;
 			}
 
 		}
@@ -291,11 +299,11 @@ public class Player {
 	public static class PlayerFighter extends FightingCharacter {
 
 		private final Player player;
-		private final DungeonInfo dungeon;
+		private final FightInfo dungeon;
 
-		public PlayerFighter(Player player, DungeonInfo dungeon) {
+		public PlayerFighter(Player player, FightInfo fight) {
 			this.player = player;
-			this.dungeon = dungeon;
+			this.dungeon = fight;
 		}
 
 		public static void guard(FightInfo fight, Consumer<Float> callback) {
