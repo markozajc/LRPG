@@ -64,15 +64,26 @@ class Combat {
 	public static void fightEnemy(@Nonnull FightInfo fight, BiConsumer<Boolean, StringBuilder> callback) {
 		if (!fight.isResumed())
 			fight.getPlayerFighter().addTime(1f);
-		turnPlayer(fight, fc -> callback.accept(fc.equals(fight.getPlayerFighter()), fight.getPlayerFight().getFeed()));
+		// Adds starting time to the player if the fight is fresh (not resumed)
+
+		Consumer<FightingCharacter> callbackInvoker = fc -> callback.accept(fc.equals(fight.getPlayerFighter()),
+			fight.getPlayerFight().getFeed());
+		if (!fight.getPlayerFight().getEnemy().getInfo().isBoss() && Utilities.getChance(.5f)) {
+			// If enemy struck first (only non-bosses) - 50%
+			// TODO V2 stealth stat
+			turnEnemy(fight, callbackInvoker);
+		} else {
+			// If player struck first
+			turnPlayer(fight, callbackInvoker);
+		}
 	}
 
-	public static void turnPlayer(@Nonnull FightInfo fight, @Nonnull Consumer<FightingCharacter> endCallback) {
+	private static void turnPlayer(@Nonnull FightInfo fight, @Nonnull Consumer<FightingCharacter> endCallback) {
 		turnCharacter(fight, fight.getPlayerFighter(), fight.getPlayerFight().getEnemy(),
 			v -> turnEnemy(fight, endCallback), endCallback);
 	}
 
-	public static void turnEnemy(@Nonnull FightInfo fight, @Nonnull Consumer<FightingCharacter> endCallback) {
+	private static void turnEnemy(@Nonnull FightInfo fight, @Nonnull Consumer<FightingCharacter> endCallback) {
 		turnCharacter(fight, fight.getPlayerFight().getEnemy(), fight.getPlayerFighter(),
 			v -> turnPlayer(fight, endCallback), endCallback);
 	}
