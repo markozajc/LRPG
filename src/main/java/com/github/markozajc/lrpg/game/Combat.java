@@ -155,7 +155,7 @@ class Combat {
 
 		private float time = 0f;
 
-		public void decreaseHp(int value) {
+		public final void decreaseHp(int value) {
 			this.setHp(getHp() - value);
 		}
 
