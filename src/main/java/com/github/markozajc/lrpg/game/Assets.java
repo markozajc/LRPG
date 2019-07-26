@@ -243,24 +243,22 @@ public class Assets {
 					.map(t -> "**" + t.getNameWithEmote() + "**")
 					.collect(Collectors.joining(" and ")) + ".",
 				Constants.GREEN));
-	public static final PreparedDialog<DungeonInfo> DEATH_PREPARED = new PreparedEmbedDialog<>(
-			d -> EmbedDialog.setFooterUser(new EmbedBuilder(), d.getAuthor())
-					.setColor(Constants.RED)
-					.setTitle(Assets.TOMB_EMOTE + " You died..")
-					.addField("Statistics",
-						String.format(DEATH_STATS_FORMAT, Assets.BONES_EMOTE,
-							d.getPlayerDungeon().getStatistics().getEnemiesSlain(),
-							d.getPlayerDungeon().getStatistics().getHealiesConsumed(), Assets.CHEST_EMOTE,
-							d.getPlayerDungeon().getStatistics().getChestsOpened(), Assets.BOOK_EMOTE,
-							d.getPlayerDungeon().getStatistics().getMysteriousBooksRead(), Assets.GOLD_EMOTE,
-							d.getPlayerDungeon().getStatistics().getItemsPurchased(), Assets.AMULET_EMOTE,
-							d.getPlayerDungeon().getReputation(d.getPlayer().getXp())),
-						false)
-					.addField("Gear lost",
-						String.format(DEATH_GEAR_LOST_FORMAT, d.getPlayer().getWeapon().getNameWithEmote(),
-							d.getPlayer().getArmor().getNameWithEmote()),
-						false)
-					.build());
+	public static final PreparedDialog<DungeonInfo> DEATH_PREPARED = new PreparedEmbedDialog<>(d -> EmbedDialog
+			.setFooterUser(new EmbedBuilder(), d.getAuthor())
+			.setColor(Constants.RED)
+			.setTitle(Assets.TOMB_EMOTE + " You died..")
+			.addField("Statistics", String.format(DEATH_STATS_FORMAT, Assets.BONES_EMOTE,
+				d.getPlayerDungeon().getStatistics().getEnemiesSlain(), HealingItemDatabase.POTION_HEALING.getEmote(),
+				d.getPlayerDungeon().getStatistics().getHealiesConsumed(), Assets.CHEST_EMOTE,
+				d.getPlayerDungeon().getStatistics().getChestsOpened(), Assets.BOOK_EMOTE,
+				d.getPlayerDungeon().getStatistics().getMysteriousBooksRead(), Assets.GOLD_EMOTE,
+				d.getPlayerDungeon().getStatistics().getItemsPurchased(), Assets.AMULET_EMOTE,
+				d.getPlayerDungeon().getReputation(d.getPlayer().getXp())), false)
+			.addField("Gear lost",
+				String.format(DEATH_GEAR_LOST_FORMAT, d.getPlayer().getWeapon().getNameWithEmote(),
+					d.getPlayer().getArmor().getNameWithEmote()),
+				false)
+			.build());
 	public static final PreparedDialog<RegionDatabase> NEXT_REGION_PREPARED = new PreparedEmbedDialog<>(
 			r -> EmbedDialog.generateEmbed(Assets.UP_EMOTE + " Welcome to the **%s**!", r.getName(), Constants.GREEN));
 	public static final PreparedDialog<DungeonInfo> DUNGEON_STATUS_PREPARED = new PreparedEmbedDialog<>(d -> {
