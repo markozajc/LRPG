@@ -26,7 +26,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 @SuppressFBWarnings("PZLA_PREFER_ZERO_LENGTH_ARRAYS")
 public class Enemies {
 
-	private static final String IMGROOT = "https://raw.githubusercontent.com/FallenNationDev/spd-enemies-animated/master";
+	private static final String IMGROOT = "https://github.com/markozajc/LRPG/tree/9c43b2b6f51130385571864e4cec77e428cf005d/assets/images/gif";
 
 	private Enemies() {}
 
@@ -95,6 +95,10 @@ public class Enemies {
 			return this.info.getSpeed();
 		}
 
+		@Override
+		public int getMaxHp() {
+			return this.info.getMaxHp();
+		}
 	}
 
 	public enum BossInformationDatabase implements EnemyInformation {

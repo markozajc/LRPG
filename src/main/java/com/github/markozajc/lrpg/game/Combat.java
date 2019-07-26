@@ -9,8 +9,10 @@ import com.github.markozajc.lithium.Constants;
 import com.github.markozajc.lrpg.game.Enemies.Enemy;
 import com.github.markozajc.lrpg.game.Items.Item;
 import com.github.markozajc.lrpg.game.LRpgExposed.AttackDefenseCharacter;
+import com.github.markozajc.lrpg.game.LRpgExposed.EmotableObject;
 import com.github.markozajc.lrpg.game.LRpgExposed.NamedObject;
 import com.github.markozajc.lrpg.game.LRpgExposed.ObjectWithSpeed;
+import com.github.markozajc.lrpg.game.LRpgExposed.TurnActionObject;
 import com.github.markozajc.lrpg.game.Statuses.FightInfo;
 
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -28,6 +30,10 @@ class Combat {
 	public static final float CRIT_CHANCE = 0.1f;
 
 	public static final int MAX_GUARD = 5;
+
+	public static float hitTurn(FightingCharacter self, FightingCharacter foe, int foeGuard, FightInfo fight) {
+		return hitTurn(self, foe, foeGuard, fight, 0);
+	}
 
 	public static float hitTurn(FightingCharacter self, FightingCharacter foe, int foeGuard, FightInfo fight, int selfAttackOffset) {
 		boolean critical = Utilities.getChance(Combat.CRIT_CHANCE);
@@ -55,10 +61,6 @@ class Combat {
 		}
 
 		return self.getSpeed();
-	}
-
-	public static float hitTurn(FightingCharacter self, FightingCharacter foe, int foeGuard, FightInfo fight) {
-		return hitTurn(self, foe, foeGuard, fight, 0);
 	}
 
 	public static void fightEnemy(@Nonnull FightInfo fight, BiConsumer<Boolean, StringBuilder> callback) {
@@ -174,6 +176,8 @@ class Combat {
 
 		public abstract int getHp();
 
+		public abstract int getMaxHp();
+
 		public abstract void turn(FightInfo fight, Consumer<Float> callback);
 
 		public float getTime() {
@@ -191,6 +195,59 @@ class Combat {
 		public final void takeTime(float time) {
 			setTime(getTime() - time);
 		}
+	}
+
+	public static interface Effect extends NamedObject, EmotableObject, TurnActionObject {}
+
+	public static interface HealthLossEffect extends Effect {
+
+		public float getHpLossPercentage();
+
+		@Override
+		public default void onTurn(TurnInfo turn) {
+			int hploss = Math.round(turn.getSelf().getMaxHp() * getHpLossPercentage());
+			turn.getSelf().decreaseHp(hploss);
+			turn.getFight()
+					.getPlayerFight()
+					.getFeed()
+					.append(turn.getSelf().getName() + " lost " + hploss + " HP due to " + getName() + "! ");
+		}
+
+	}
+
+	public enum HealthLossEffectDatabase implements HealthLossEffect {
+		POISON("Poison", "", .02f),
+		CAUSTIC("Caustic ooze", "", .1f),
+		BLEED("Bleeding", "", .05f),
+		FIRE("Fire", "", .15f);
+
+		@Nonnull
+		private final String name;
+		@Nonnull
+		private final String emote;
+		private final float healthPercentage;
+
+		private HealthLossEffectDatabase(@Nonnull String name, @Nonnull String emote, float healthPercentage) {
+			this.name = name;
+			this.emote = emote;
+			this.healthPercentage = healthPercentage;
+		}
+
+		@Override
+		public String getName() {
+			return this.name;
+		}
+
+		@Override
+		public String getEmote() {
+			return this.emote;
+		}
+
+		@Override
+		public float getHpLossPercentage() {
+			return this.healthPercentage;
+		}
+
 	}
 
 }

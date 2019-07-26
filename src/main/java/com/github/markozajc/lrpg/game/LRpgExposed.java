@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.markozajc.lithium.processes.context.CommandContext;
 import com.github.markozajc.lithium.utilities.dialogs.waiter.ChoiceDialog;
+import com.github.markozajc.lrpg.game.Combat.FightingCharacter;
 import com.github.markozajc.lrpg.game.Enemies.EnemyInformation;
 import com.github.markozajc.lrpg.game.Items.ArmorDatabase;
 import com.github.markozajc.lrpg.game.Items.ArmorItem;
@@ -16,7 +17,7 @@ import com.github.markozajc.lrpg.game.Items.Item;
 import com.github.markozajc.lrpg.game.Items.UsableItemDatabase;
 import com.github.markozajc.lrpg.game.Items.WeaponDatabase;
 import com.github.markozajc.lrpg.game.Items.WeaponItem;
-import com.github.markozajc.lrpg.game.Statuses.DungeonInfo;
+import com.github.markozajc.lrpg.game.Statuses.FightInfo;
 import com.github.markozajc.lrpg.game.Statuses.GameInfo;
 import com.google.gson.GsonBuilder;
 
@@ -113,9 +114,42 @@ public class LRpgExposed {
 
 	}
 
-	public static interface TimedObject {
+	public static interface TurnActionObject {
 
-		public void onTurn(@Nonnull DungeonInfo dungeon);
+		public static class TurnInfo {
+
+			@Nonnull
+			private final FightInfo fight;
+			@Nonnull
+			private final FightingCharacter self;
+			@Nonnull
+			private final FightingCharacter foe;
+
+			public TurnInfo(@Nonnull FightInfo fight, @Nonnull FightingCharacter self,
+					@Nonnull FightingCharacter foe) {
+				this.fight = fight;
+				this.self = self;
+				this.foe = foe;
+			}
+
+			@Nonnull
+			public FightInfo getFight() {
+				return this.fight;
+			}
+
+			@Nonnull
+			public FightingCharacter getSelf() {
+				return this.self;
+			}
+
+			@Nonnull
+			public FightingCharacter getFoe() {
+				return this.foe;
+			}
+
+		}
+
+		public void onTurn(TurnInfo turn);
 
 	}
 

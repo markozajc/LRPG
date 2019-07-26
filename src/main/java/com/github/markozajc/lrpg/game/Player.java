@@ -417,5 +417,10 @@ public class Player {
 			this.fight.getPlayerFight().setPlayerTime(time);
 		}
 
+		@Override
+		public int getMaxHp() {
+			return this.player.getMaxHp();
+		}
+
 	}
 }
