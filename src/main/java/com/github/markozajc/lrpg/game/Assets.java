@@ -360,7 +360,7 @@ public class Assets {
 	public static final PreparedDialog<ItemStack> ITEM_INFO_PREPARED = new PreparedEmbedDialog<>(is -> {
 		EmbedBuilder builder = new EmbedBuilder().setColor(Constants.NONE)
 				.setTitle(is.getItem().getNameWithEmote())
-				.appendDescription("_" + is.getItem().getDescription() + "_")
+				.appendDescription("_" + is.getItem().getDescription() + "_\n")
 				.setFooter("You have [" + is.getQuantity() + "] of this item.", null);
 
 		if (is.getItem() instanceof HealingItem) {
