@@ -1014,7 +1014,7 @@ public class Items {
 
 	public static void useBattleItem(BattleItem item, FightInfo fight, Consumer<String> callback) {
 		Consumer<String> removal = result -> {
-			if (result.isEmpty())
+			if (!result.isEmpty())
 				fight.getPlayer().getInventory().removeItem(item, 1);
 		};
 		item.use(fight, removal.andThen(callback));
