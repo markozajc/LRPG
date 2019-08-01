@@ -26,12 +26,12 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 @SuppressFBWarnings("PZLA_PREFER_ZERO_LENGTH_ARRAYS")
 public class Enemies {
 
-	private static final String IMGROOT = "https://raw.githubusercontent.com/FallenNationDev/spd-enemies-animated/master";
+	private static final String IMGROOT = "https://raw.githubusercontent.com/markozajc/LRPG/9c43b2b6f51130385571864e4cec77e428cf005d/assets/images/gif";
 
 	private Enemies() {}
 
 	public static interface EnemyInformation extends NamedObject, PicturableObject, ObjectWithReputation,
-			ObjectWithSpeed, AttackDefenseCharacter, IdentifiableObject {
+		ObjectWithSpeed, AttackDefenseCharacter, IdentifiableObject {
 
 		public int getGoldDrop();
 
@@ -62,7 +62,7 @@ public class Enemies {
 
 		@Override
 		public void turn(FightInfo fight, Consumer<Float> callback) {
-			callback.accept(Combat.hitTurn(this, fight.getPlayerFighter(), fight.getPlayerGuard(), fight));
+			callback.accept(Combat.hitTurn(this, fight.getPlayerFighter(), fight.getPlayerFight().getGuard(), fight));
 		}
 
 		@Override
@@ -95,6 +95,10 @@ public class Enemies {
 			return this.info.getSpeed();
 		}
 
+		@Override
+		public int getMaxHp() {
+			return this.info.getMaxHp();
+		}
 	}
 
 	public enum BossInformationDatabase implements EnemyInformation {
@@ -128,9 +132,9 @@ public class Enemies {
 		private final String imageUrl;
 
 		private BossInformationDatabase(@Nonnull String name, @Nonnegative int minAttack, @Nonnegative int maxAttack, // NOSONAR
-				@Nonnegative float attackSpeed, @Nonnegative int minDefense, @Nonnegative int maxDefense,
-				@Nonnegative long reputation, @Nonnegative int xp, @Nonnegative int maxHp, @Nonnegative int goldDrop,
-				@Nullable Supplier<ItemRarityPack> drops, @Nonnull String imageUrl) {
+			@Nonnegative float attackSpeed, @Nonnegative int minDefense, @Nonnegative int maxDefense,
+			@Nonnegative long reputation, @Nonnegative int xp, @Nonnegative int maxHp, @Nonnegative int goldDrop,
+			@Nullable Supplier<ItemRarityPack> drops, @Nonnull String imageUrl) {
 			this.name = name;
 			this.attack = new RangedValue(minAttack, maxAttack);
 			this.defense = new RangedValue(minDefense, maxDefense);
@@ -227,7 +231,7 @@ public class Enemies {
 				if (this.pump == Assets.GOO_PUMP_REQUIRED + 1 && this.fight != null) {
 					this.pump = 0;
 
-					if (this.fight.getPlayerGuard() >= 3)
+					if (this.fight.getPlayerFight().getGuard() >= Assets.GOO_PUMP_REQUIRED - 1)
 						return Assets.GOO_ATTACK_PUMP_FAIL;
 
 					return Assets.GOO_ATTACK_PUMP;
@@ -245,7 +249,7 @@ public class Enemies {
 				this.pump++;
 
 				if (this.pump == Assets.GOO_PUMP_REQUIRED) {
-					fight.getFeed().append(Assets.GOO_PUMP_TEXT);
+					fight.getPlayerFight().getFeed().append(Assets.GOO_PUMP_TEXT);
 					this.pump++;
 					callback.accept(3f);
 				} else {
@@ -298,7 +302,7 @@ public class Enemies {
 		private final String imageUrl;
 
 		private RegionDatabase(@Nonnull String name, @Nonnegative int reputation, @Nonnull BossDatabase boss,
-				@Nonnull String imageUrl) {
+			@Nonnull String imageUrl) {
 			this.name = name;
 			this.reputation = reputation;
 			this.boss = boss;
@@ -370,8 +374,8 @@ public class Enemies {
 		private final RangedValueObject defense;
 
 		private EnemyDatabase(@Nonnull String name, @Nonnegative int minAttack, @Nonnegative int maxAttack, // NOSONAR
-				@Nonnegative float attackSpeed, @Nonnull RegionDatabase region, @Nonnegative long reputationOffset,
-				@Nonnegative int xp, @Nonnegative int maxHp, @Nonnegative int goldDrop, @Nonnull String imageUrl) {
+			@Nonnegative float attackSpeed, @Nonnull RegionDatabase region, @Nonnegative long reputationOffset,
+			@Nonnegative int xp, @Nonnegative int maxHp, @Nonnegative int goldDrop, @Nonnull String imageUrl) {
 			this.name = name;
 			this.attack = new RangedValue(minAttack, maxAttack);
 			this.attackSpeed = attackSpeed;
@@ -456,33 +460,40 @@ public class Enemies {
 		Combat.fightEnemy(fight, (win, feed) -> {
 			if (win) {
 				Item item = null;
-				ItemRarityPack drop = fight.getEnemy().getInfo().getItemDrops();
+				ItemRarityPack drop = fight.getPlayerFight().getEnemy().getInfo().getItemDrops();
 				if (drop != null && Utilities.getChance(drop.getRarity()))
-					item = drop.maybeGetItem(fight.getPlayer().getReputation());
+					item = drop.maybeGetItem(fight.getPlayerDungeon().getReputation(fight.getPlayer().getXp()));
 
 				if (item != null)
 					fight.getPlayer().getInventory().addItem(item, 1);
 
-				fight.getPlayer().getStatistics().enemySlain();
-				fight.getPlayer().setGold(fight.getPlayer().getGold() + fight.getEnemy().getInfo().getGoldDrop());
-				fight.getPlayer().setXp(fight.getPlayer().getXp() + fight.getEnemy().getInfo().getXpDrop());
+				fight.getPlayerDungeon().getStatistics().enemySlain();
+				fight.getPlayer()
+					.setGold(fight.getPlayer().getGold() + fight.getPlayerFight().getEnemy().getInfo().getGoldDrop());
+				fight.getPlayer()
+					.setXp(fight.getPlayer().getXp() + fight.getPlayerFight().getEnemy().getInfo().getXpDrop());
 
 				fight.getChannel()
-						.sendMessage(Combat.getVictoryStatus(fight.getEnemy(), feed, item == null ? null : item))
-						.queue();
+					.sendMessage(
+						Combat.getVictoryStatus(fight.getPlayerFight().getEnemy(), feed, item == null ? null : item))
+					.queue();
 
-				if (fight.getEnemy().getInfo().isBoss())
-					fight.getPlayer().setLastRegionBoss(fight.getPlayer().getRegion());
+				if (fight.getPlayerFight().getEnemy().getInfo().isBoss()) {
+					RegionDatabase region = fight.getPlayerDungeon().getRegion(fight.getPlayer().getXp());
+					fight.getPlayerDungeon().setLastRegionBoss(region);
+					Assets.NEXT_REGION_PREPARED.generate(region).display(fight.getChannel());
+				}
 
 				Utilities.sleep(1000);
-				fight.getPlayer().setHp(fight.getPlayer().getHp() + Dungeon.TURN_HEAL);
+				fight.getPlayerDungeon()
+					.setHp(fight.getPlayerDungeon().getHp() + Dungeon.TURN_HEAL, fight.getPlayer().getMaxHp());
 
 			} else {
-				fight.getPlayer().setHp(0);
+				fight.getPlayerDungeon().setHp(0, fight.getPlayer().getMaxHp());
 			}
 
-			fight.getPlayer().setFightCurrentEnemy(null);
-			fight.getPlayer().addDungeonStep();
+			fight.getPlayerDungeon().removePlayerFight();
+			fight.getPlayerDungeon().addStep();
 			Dungeon.displayDungeon(new DungeonInfo(fight));
 		});
 	}

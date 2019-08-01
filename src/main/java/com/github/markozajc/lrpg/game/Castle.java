@@ -20,21 +20,21 @@ class Castle {
 	private Castle() {}
 
 	public static void displayCastle(GameInfo game) {
-		if (game.getPlayer().isInDungeon()) {
-			Dungeon.displayDungeon(new DungeonInfo(game));
-
-		} else {
+		if (game.getPlayer().getPlayerDungeon() == null) {
 			new ChoiceDialog(game.getContext(), Assets.CASTLE_STATUS_PREPARED.generate(game), choice -> {
 				if (choice == 0) {
 					// Dungeon
 					new BooleanDialog(game.getContext(), Assets.DESCENT_MESSAGE, decision -> {
-						if (decision)
+						if (decision) {
 							Dungeon.displayDungeon(new DungeonInfo(game));
+						} else {
+							displayCastle(game);
+						}
 					}).display(game.getChannel());
 
 				} else if (choice == 1) {
 					// Inventory
-					Items.openInventoryRepeating(game, () -> displayCastle(game));
+					Items.openInventoryRepeating(game, Utilities.CASTLE_PICK, () -> displayCastle(game));
 
 				} else if (choice == 2) {
 					// Unequip all
@@ -73,6 +73,9 @@ class Castle {
 				}
 
 			}, "p", "i", "u", "exit").display(game.getChannel());
+
+		} else {
+			Dungeon.displayDungeon(new DungeonInfo(game));
 		}
 	}
 }

@@ -1,10 +1,10 @@
 ========= LRPG =========
-LRPG is a semi-roguelike dungeon crawler bot for Discord. It has been develop as a part of the Discord Hack Week competition and falls under the "entertainment" bot category. If you do not want to build it by hand, you can test it out in its official support server (https://discord.gg/asDUrbR) or invite it to your server using https://discordapp.com/oauth2/authorize?client_id=594167165494624287&scope=bot&permissions=280640.
+LRPG is a semi-roguelike dungeon crawler bot for Discord implemented using Lithium. If you do not want to build it by hand, you can check it out in its official support server (https://discord.gg/asDUrbR) or invite it to your server using https://discordapp.com/oauth2/authorize?client_id=594167165494624287&scope=bot&permissions=280640.
 
 Building prequisites======
 You need to ensure several things before you can build LRPG
 - You need to have Maven and JDK 11+ installed (this also assumes Maven binaries are in your PATH and JAVA_HOME is set appropriately)
-- You need a Discord bot & token (guide: https://github.com/reactiflux/discord-irc/wiki/Creating-a-discord-bot-&-getting-a-token)
+- You need a Discord bot & token (guide: https://tinyurl.com/y6y9w2at)
 - You need Lithium (repo & install guide: https://github.com/markozajc/Lithium)
 - Your bot needs to be in a resource server (see FAQ)
 
@@ -16,11 +16,22 @@ You can build LRPG using Maven with the following command
 This will create a shaded jar (shaded means it contains all of the dependencies, sometimes also called a "fatjar") in the target directory. You are free to move this jar to any directory of your choice (even on another machine) as it does not rely on anything from your machine anymore. Before you can run it, you also need to create a configuration file. Here's an example
 
 	token=[The token you got from creating a bot application on Discord's developer portal]
-	owner=[Your Discord user ID (https://support.discordapp.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-)]
+	owner=[Your Discord user ID (https://tinyurl.com/dscrd-id)]
 	prefix=[Your bot's prefix]
 	data=[The data directory. This is where the bot will store the player data]
+	name=[Bot's name you set when you created a Discord application]
+	poolsize=[Threadpool size. Set this to 20 if you don't know what it is]
 	
-Copy the above text into a file called "config.cfg" in the same directory as the jar file and fill out the details in the brackets (also remove the brackets). Then issue the following command
+Copy the above text into a file called "config.cfg" in the same directory as the jar file and fill out the details in the brackets (also remove the brackets). You should end up with something like 
+
+	token=NTk0NjA1NTEyiTc5mzEyNjcx.XRe4fg.KujjusalLiJycC0zxdw3l-RMohd
+	owner=194905582779112671
+	prefix=!
+	data=data
+	name=LRPG Bot
+	poolsize=20
+
+(None of these details are real. The token is made-up and does not correspond to any bot). Then issue the following command
 
 	java -jar [jarfile.jar] config.cfg
 	
@@ -31,7 +42,7 @@ Q: What is a resource server
 A: LRPG uses Discord emotes to prettifty various states and dialogs. While it's not necessary for it to be able to do so, it certainly enhances the experience. All of the emotes are stored in a specialized server - you can ask me to add your bot into it by joining the support server mentioned before and pinging/messaging me or by sending me (Marko Zajc#2119) a friend request and sending me a message with the invite link of your bot. Discord unfortunately supports no way to let people without the "Manage Server" permission add bots to guilds, so this is the only way to get your bot in there. If you're not comfortable with this, you can create your own resource server and fill it with the emotes from LRPG/assets/emotes. Do note that you will need to correct all emote references to point to your servers' emotes (some are in Assets, others implement EmotableObject).
 
 Q: What's the difference between semi-roguelike and roguelike?
-A: A roguelike game is a game where you lose ALL of your stuff, essentially erasing your progress. LRPG is semi-roguelike because you still lose equipped gear when you die and you are placed at the start of the dungeon, but you retain your inventory, levels and gold.
+A: A roguelike game is a game where you lose all of your stuff, essentially erasing your progress. LRPG is semi-roguelike because you still lose equipped gear when you die and you are placed at the start of the dungeon, but you retain your inventory, levels and gold. There are also some other smaller differences.
 
 Q: Where are the images (embed thumbnails, not emotes) hosted?
 A: Static images are hosted at https://postimages.org/, animated (gif) enemy sprites are hosted at https://github.com/FallenNationDev/spd-enemies-animated. You can get both at LRPG/assets/images.

@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nonnull;
+
 import com.github.markozajc.lithium.Constants;
 import com.github.markozajc.lithium.commands.Command;
 import com.github.markozajc.lithium.commands.CommandCategory;
@@ -20,10 +22,12 @@ import com.github.markozajc.lrpg.game.Assets;
 import com.github.markozajc.lrpg.game.Items.ArmorDatabase;
 import com.github.markozajc.lrpg.game.Items.UsableItemDatabase;
 import com.github.markozajc.lrpg.game.Items.WeaponDatabase;
+import com.github.markozajc.lrpg.game.LRpgExposed.NamedObject;
+import com.github.markozajc.lrpg.game.LRpgExposed.PicturableObject;
 
 import net.dv8tion.jda.core.EmbedBuilder;
 
-public class Manual extends Command {
+public class ManualCommand extends Command {
 
 	@Override
 	public void execute(CommandContext context, Parameters params) throws Throwable {
@@ -59,25 +63,31 @@ public class Manual extends Command {
 
 	@Override
 	public String[] getAliases() {
-		return Commands.toArray("help", "advice", "guide");
+		return Commands.toArray("advice", "guide");
 	}
 
-	private static class ManualPage {
+	private static class ManualPage implements PicturableObject, NamedObject {
 
+		@Nonnull
 		private final String name;
+		private final String image;
+		@Nonnull
 		private final PreparedDialog<CommandContext> dialog;
 
-		public ManualPage(String name, Function<CommandContext, String> content) {
+		public ManualPage(@Nonnull String name, String image, @Nonnull Function<CommandContext, String> content) {
 			this.name = name;
+			this.image = image;
 			this.dialog = new PreparedEmbedDialog<>(
 					context -> EmbedDialog.setAuthorUser(new EmbedBuilder(), context.getUser())
 							.setTitle(name)
+							.setImage(image)
 							.setDescription(content.apply(context))
 							.setColor(Constants.LITHIUM)
 							.setFooter("Type in [B] to return to the page selection", null)
 							.build());
 		}
 
+		@Override
 		public String getName() {
 			return this.name;
 		}
@@ -86,15 +96,21 @@ public class Manual extends Command {
 			return this.dialog;
 		}
 
+		@Override
+		public String getImageUrl() {
+			return this.image;
+		}
+
 	}
 
 	private static final ManualPage[] MANUAL = new ManualPage[] {
 
-			new ManualPage(Assets.MANUAL_EMOTE + " Getting started",
+			new ManualPage(Assets.SCROLLBOOK_IMAGE + " Getting started",
+					"https://i.postimg.cc/vBWL7VLp/01-getting-started.png",
 					context -> "Welcome to LRPG! To get started, go to another channel (so that you will still be able to use the manual) and type in `"
 							+ context.getLithium().getConfiguration().getDefaultPrefix()
 							+ "lrpg`. First-time players get some gold and items for an easier start, so be sure to check that out before you descend into the dungeon!"),
-			new ManualPage(Assets.BACK_EMOTE + " Navigation",
+			new ManualPage(Assets.BACK_EMOTE + " Navigation", "https://i.postimg.cc/HnzwR1Nz/02-navigation.png",
 					context -> "Navigating around LRPG is very easy - in fact you've already learned how to navigate the castle and manual dialogs by opening this manual page! "
 							+ "Most dialogs of LRPG are pretty straightforward - "
 							+ "you either have to enter a letter or click on an emoji to proceed. When, for example, you want to open your "
@@ -102,11 +118,12 @@ public class Manual extends Command {
 							+ " **[I]**nventory, you just have to send a message \"I\" (it's case-insensitive so \"i\" will also work!). "
 							+ "When you are presented with a yes/no choice, you just have to pick your decision from the buttons below the message box (so either "
 							+ Constants.ACCEPT_EMOJI + " or " + Constants.DENY_EMOJI + "."),
-			new ManualPage(Assets.INVENTORY_EMOTE + " Inventory",
+			new ManualPage(Assets.INVENTORY_EMOTE + " Inventory", "https://i.postimg.cc/sDf9S1BN/03-inventory.png",
 					context -> "Your inventory is where your collected items go. You can open it up with the letter \"I\" in most dialogs. "
-							+ "Your inventory is presented as a list of numbered items - to use one (drink, eat, equip, read, ...), just type in \"U <item's number>\" (for example \"U 1\"). "
+							+ "Your inventory is presented as a list of numbered items - to use one (drink, eat, equip, read, ...), just type in \"U <item's number>\" "
+							+ "(for example \"U 1\". \"U1\" will also work). "
 							+ "If you aren't sure what an item does, you can type in \"I <item number>\" (I here stands for \"information\")."),
-			new ManualPage(ArmorDatabase.HERO.getEmote() + " Gear",
+			new ManualPage(ArmorDatabase.HERO.getEmote() + " Gear", "https://i.postimg.cc/D0nQxwxm/04-gear.png",
 					context -> "Your gear will help you win battles and not die while exploring. "
 							+ "You can have two pieces of gear equipped at a time - weapon and armor. "
 							+ "Your weapon boosts your damage and helps you defeat enemies more easily. "
@@ -120,14 +137,14 @@ public class Manual extends Command {
 							+ "This means that if you get a piece of gear that you want to wear, you'll have to either **"
 							+ Assets.TELEPORT_EMOTE + " Return to your castle** or proceed with your current gear.\n"
 							+ "You will also lose all of your gear if you die in the dungeon, so plan ahead."),
-			new ManualPage(Assets.GOLD_EMOTE + " The dungeon",
+			new ManualPage(Assets.GOLD_EMOTE + " The dungeon", "https://i.postimg.cc/JzGN6g53/05-dungeon.png",
 					context -> "The dungeon is the place where the core gameplay of LRPG takes place at. There are several regions of the dungeon, "
 							+ "each being guarded with its own unique " + Assets.BOSS_EMOTE + " boss. "
 							+ "When you get enough reputation, "
 							+ "you will be able to either fight it and proceed to the next region or return to your castle if you feel like you aren't prepared for the battle.\n"
 							+ "	By exploring the dungeon, you will encounter various unique encounters that you can interact with - some harmful, some not. "
 							+ "You will also bump into a lot of enemies and that's where your gear and combat skill comes in."),
-			new ManualPage(WeaponDatabase.HSWORD.getEmote() + " Combat",
+			new ManualPage(WeaponDatabase.HSWORD.getEmote() + " Combat", "https://i.postimg.cc/wxQQ7DBN/06-combat.png",
 					context -> "LRPG has a turn-based combat mechanic, meaning that you and your foe take turns. "
 							+ "The duration of your turn depends on the speed of your and your foe's weapon - the slower your/foe's weapon is, "
 							+ "the less turns you/foe gets. If, for example, "
@@ -137,11 +154,11 @@ public class Manual extends Command {
 							+ "you can use items from your inventory to help you in the battle or raise your guard. "
 							+ "Raising your guard will grant you more resistance to your foe's attacks, "
 							+ "but you can only raise your guard to a certain amount. Your guard will deplete over time if you don't raise it for a while."),
-			new ManualPage(Assets.BONES_EMOTE + " Defeat",
+			new ManualPage(Assets.BONES_EMOTE + " Defeat", "https://i.postimg.cc/fTH7vZmT/07-defeat.png",
 					context -> "LRPG is a partially roguelike game, so defeat is inevitable. Everytime you die (or surrender) in a battle, "
 							+ "you lose all your equipped gear and you're placed at the start of the dungeon. "
 							+ "But don't worry, your items and gold are safe and will not be lost when you die."),
-			new ManualPage(Assets.AMULET_EMOTE + " Credits",
+			new ManualPage(Assets.AMULET_EMOTE + " Credits", null,
 					context -> "All pictures and resources were kindly provided by [ShatteredPixelDungeon made by 00-Evan](https://github.com/00-Evan/shattered-pixel-dungeon/)"
 							+ " and [PixelDungeon made by watabou](https://github.com/watabou/pixel-dungeon) (because I suck at pixelart). "
 							+ "Both are amazing opensource games you should definitely check out. "
@@ -155,8 +172,8 @@ public class Manual extends Command {
 		Counter c = new Counter();
 		return EmbedDialog.setAuthorUser(new EmbedBuilder(), context.getUser())
 				.setColor(Constants.LITHIUM)
-				.setTitle(Assets.MANUAL_EMOTE + " LRPG Manual")
-				.setThumbnail(Assets.SCROLLBOOK_IMAGE)
+				.setTitle("LRPG Manual")
+				.setThumbnail(Assets.MANUAL_IMAGE)
 				.appendDescription("Welcome to the **LRPG Manual**! Choose a page.")
 				.addField("Pages", Arrays.asList(MANUAL).stream().map(page -> {
 					c.count();

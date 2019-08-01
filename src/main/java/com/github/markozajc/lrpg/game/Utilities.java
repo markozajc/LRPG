@@ -25,13 +25,17 @@ import com.github.markozajc.lrpg.game.Enemies.EnemyInformation;
 import com.github.markozajc.lrpg.game.Enemies.RegionDatabase;
 import com.github.markozajc.lrpg.game.Items.ArmorDatabase;
 import com.github.markozajc.lrpg.game.Items.ArmorItem;
+import com.github.markozajc.lrpg.game.Items.BattleItem;
 import com.github.markozajc.lrpg.game.Items.BattleItemDatabase;
+import com.github.markozajc.lrpg.game.Items.DungeonItem;
 import com.github.markozajc.lrpg.game.Items.GearDatabase;
 import com.github.markozajc.lrpg.game.Items.GearItem;
+import com.github.markozajc.lrpg.game.Items.HealingItem;
 import com.github.markozajc.lrpg.game.Items.HealingItemDatabase;
 import com.github.markozajc.lrpg.game.Items.Item;
 import com.github.markozajc.lrpg.game.Items.ItemDatabase;
 import com.github.markozajc.lrpg.game.Items.ItemRarityPack;
+import com.github.markozajc.lrpg.game.Items.UsableItem;
 import com.github.markozajc.lrpg.game.Items.UsableItemDatabase;
 import com.github.markozajc.lrpg.game.Items.WeaponDatabase;
 import com.github.markozajc.lrpg.game.Items.WeaponItem;
@@ -414,4 +418,19 @@ public class Utilities {
 
 		return null;
 	}
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// ITEM PREDICATES
+	//////////////////////////////////////////////////////////////////////////////////////
+	public static final Predicate<Item> NO_UNUSABLE_ITEMS = item -> item instanceof UsableItem;
+	public static final Predicate<Item> NO_GEAR_ITEMS = item -> !(item instanceof GearItem);
+	public static final Predicate<Item> NO_FIGHT_ITEMS = item -> !(item instanceof BattleItem);
+	public static final Predicate<Item> NO_DUNGEON_ITEMS = item -> !(item instanceof DungeonItem);
+	public static final Predicate<Item> HEALING_ITEMS = item -> item instanceof HealingItem;
+	public static final Predicate<Item> FIGHT_PICK = NO_GEAR_ITEMS.and(NO_UNUSABLE_ITEMS);
+	public static final Predicate<Item> DUNGEON_PICK = NO_GEAR_ITEMS.and(NO_FIGHT_ITEMS)
+			.or(HEALING_ITEMS)
+			.and(NO_UNUSABLE_ITEMS);
+	public static final Predicate<Item> CASTLE_PICK = NO_DUNGEON_ITEMS.and(NO_FIGHT_ITEMS).and(NO_UNUSABLE_ITEMS);
+
 }

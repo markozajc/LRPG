@@ -2,8 +2,11 @@ package com.github.markozajc.lrpg.game;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.github.markozajc.lithium.Constants;
 import com.github.markozajc.lithium.processes.context.CommandContext;
@@ -73,6 +76,7 @@ public class Assets {
 	public static final String LOCKED_CHEST_IMAGE = "https://i.postimg.cc/X7c90jJJ/Chest.png";
 	public static final String BACKPACK_IMAGE = "https://i.postimg.cc/Bn1VGw1b/Backpack.png";
 	public static final String RESURRECTION_DEVICE_IMAGE = "https://i.postimg.cc/76R20kXH/resurrection.png";
+	public static final String MANUAL_IMAGE = "https://i.postimg.cc/c44FqSkN/manual.png";
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ARRAYS (private)
@@ -116,6 +120,36 @@ public class Assets {
 	public static final String POTION_EXPERIENCE_DESCRIPTION_TEXT = "Drinking this potion will instantly raise your experience level.";
 	public static final String SCROLL_WIPEOUT_DESCRIPTION_TEXT = "Reading this scroll will instantly kill most enemies. "
 			+ "More powerful enemies (such as bosses) are, however, unaffected.";
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// FORMATTABLE STRINGS "FORMAT"
+	//////////////////////////////////////////////////////////////////////////////////////
+	private static final String CASTLE_ACTIONS_FORMAT = "%s **[P]**lay%n%s **[I]**nventory%n%s **[U]**nequip all gear%n%s **Exit**";
+	private static final String CASTLE_TREASURY_FORMAT = "You have **%s gold %s** and **%s** items.";
+	private static final String DUNGEON_ACTIONS_FORMAT = "%s **[E]**xplore%n%s **[I]**nventory%n%s **[R]**eturn to castle%n%s **Exit**";
+	private static final String DUNGEON_ACTIONS_BOSS_FORMAT = "%s **[E]**nter the boss chamber%n%s **[I]**nventory%n%s **[R]**eturn to castle%n%s **Exit**";
+	private static final String DEATH_GEAR_LOST_FORMAT = "**%s** and%n **%s**";
+	private static final String DEATH_STATS_FORMAT = "%s **%s** enemies slain,%n%s **%s** healing item(s) consumed,%n%s **%s** chest(s) opened,"
+			+ "%n%s **%s** mysterious book(s) read,%n%s **%s** item(s) purchased and%n%s **%s** reputation earned.";
+	private static final String DUNGEON_STATS_FORMAT = "XP: %s%nHealth: %s %s/%s %nReputation: **%s**%nGold: **%s** %s";
+	private static final String FIRST_LAUNCH_FORMAT = "LRPG is a feature-rich Discord dungeon crawler. It features plenty of areas, bosses, "
+			+ "enemies, items and unique encounters. If you ever get stuck or need advice, you can always refer to the **%s manual** "
+			+ "by running `%smanual` or ask in the [official support server](https://discord.gg/asDUrbR). "
+			+ "Because you're new to the game, you get a fistful of %s gold and a bunch of items, "
+			+ "so be sure to check that out before you descend into the dungeon.%nEnjoy!";
+	private static final String COMBAT_ACTIONS_FORMAT = "%s **[H]**it%n%s **[G]**uard\n%s **[I]**nventory\n%s **[S]**urrender\n%s **Exit**";
+	private static final String ABANDONED_SHOP_FORMAT = "This shop has been abandoned - "
+			+ "either because the merchant running it has found another job or because they have died. "
+			+ "The shop might contain dangerous hazards, but it might also contain leftover gold **%s**. Do you want to rob it?";
+	private static final String CHEST_FORMAT = "This chest appears to be locked, but it could contain some really good loot. "
+			+ "To open it, you need a **key %s**. Do you want to open it? (opening will consume a key)\n\nYou have **%s** %s %s.";
+	private static final String RESURRECTION_FORMAT = "This hourglass-like device appears to be from the era of the War between the Demons. "
+			+ "You might be able to use it to resurrect an ancient being by plugging an **** into dedicated hole and inverting the bulbs. "
+			+ "Do you want to do that?\n\nYou have **%s** %s %s**";
+	private static final String SCROLL_UPGRADE_FORMAT = "What to upgrade?%n%s **[W]**eapon%n%s **[A]**rmor%n%s **Exit** upgrade nothing, don't consume the scroll";
+	private static final String INVENTORY_ACTIONS_FORMAT = "%s **[U]**se _(you can only use **bolded** items)_%n%s **[I]**nfo\n+ Item number%n==OR==%n%s **Exit**\n_(type in the desired action, "
+			+ "for example _`U 1`_ will use the first item on the list)_";
+	private static final String COMBAT_STATS_FORMAT = "You: %s %s/%s%nEnemy: %s %s/%s";
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// DIALOGS "MESSAGE"
@@ -163,8 +197,6 @@ public class Assets {
 						+ " **However,** the mysterious book is unstable and reading it may easily have unwanted consequences."
 						+ "\nDo you want to read it?")
 			.build());
-	public static final MessageDialog ITEM_ONLY_DUNGEON_MESSAGE = new EmbedDialog(
-			EmbedDialog.generateEmbed("You can only use this item when in dungeon!", Constants.RED));
 	public static final MessageDialog ITEM_ONLY_DUNGEON_FIGHT_MESSAGE = new EmbedDialog(
 			EmbedDialog.generateEmbed("You can only use this item in a fight or while in dungeon!", Constants.RED));
 	public static final MessageDialog ITEM_ONLY_FIGHT_MESSAGE = new EmbedDialog(
@@ -191,20 +223,21 @@ public class Assets {
 	//////////////////////////////////////////////////////////////////////////////////////
 	// PREPARED DIALOGS "PREPARED"
 	//////////////////////////////////////////////////////////////////////////////////////
-	public static final PreparedDialog<GameInfo> CASTLE_STATUS_PREPARED = new PreparedEmbedDialog<>(
-			g -> new EmbedBuilder().setColor(Constants.LITHIUM)
-					.setThumbnail(Assets.CASTLE_IMAGE)
-					.setAuthor(g.getAuthor().getName() + "'s castle", null, g.getAuthor().getAvatarUrl())
-					.addField("XP", Utilities.getXpBar(g.getPlayer()), false)
-					.addField(Utilities.getGearField(g))
-					.addField("Stash", "You have **" + g.getPlayer().getGold() + " gold " + Assets.GOLD_EMOTE + "**",
-						true)
-					.addField("Actions",
-						g.getPlayer().getWeapon().getEmote() + " **[P]**lay\n" + Assets.INVENTORY_EMOTE
-								+ " **[I]**nventory\n" + ArmorDatabase.NAKED.getEmote() + " **[U]**nequip all gear\n"
-								+ Assets.BACK_EMOTE + " **Exit**",
-						false)
-					.build());
+	public static final PreparedDialog<GameInfo> CASTLE_STATUS_PREPARED = new PreparedEmbedDialog<>(g -> EmbedDialog
+			.setAuthorUser(new EmbedBuilder(), g.getAuthor())
+			.setColor(Constants.LITHIUM)
+			.setThumbnail(Assets.CASTLE_IMAGE)
+			.addField("XP", Utilities.getXpBar(g.getPlayer()), false)
+			.addField(Utilities.getGearField(g))
+			.addField("Treasury",
+				String.format(CASTLE_TREASURY_FORMAT, g.getPlayer().getGold(), Assets.GOLD_EMOTE,
+					g.getPlayer().getInventory().getItems().stream().mapToInt(ItemStack::getQuantity).sum()),
+				true)
+			.addField("Actions",
+				String.format(CASTLE_ACTIONS_FORMAT, g.getPlayer().getWeapon().getEmote(), Assets.INVENTORY_EMOTE,
+					ArmorDatabase.NAKED.getEmote(), Assets.BACK_EMOTE),
+				false)
+			.build());
 	public static final PreparedDialog<List<GearItem<?>>> UNEQUIP_ALL_PREPARED = new PreparedEmbedDialog<>(
 			unequipped -> BotUtils.buildEmbed("You unequip your " + unequipped.stream()
 					.map(t -> "**" + t.getNameWithEmote() + "**")
@@ -214,127 +247,120 @@ public class Assets {
 			.setFooterUser(new EmbedBuilder(), d.getAuthor())
 			.setColor(Constants.RED)
 			.setTitle(Assets.TOMB_EMOTE + " You died..")
-			.addField("Statistics",
-				Assets.BONES_EMOTE + " **" + d.getPlayer().getStatistics().getEnemiesSlain() + "** enemies slain,\n"
-						+ Assets.UP_EMOTE + " **" + d.getPlayer().getStatistics().getHealiesConsumed()
-						+ "** healing items consumed,\n" + Assets.CHEST_EMOTE + " **"
-						+ d.getPlayer().getStatistics().getChestsOpened() + "** chests opened,\n" + Assets.BOOK_EMOTE
-						+ " **" + d.getPlayer().getStatistics().getMysteriousBooksRead() + "** mysterious books read,\n"
-						+ Assets.GOLD_EMOTE + " **" + d.getPlayer().getStatistics().getItemsPurchased()
-						+ "** items purchased and\n" + Assets.AMULET_EMOTE + " **" + d.getPlayer().getReputation()
-						+ "** reputation earned.",
-				false)
+			.addField("Statistics", String.format(DEATH_STATS_FORMAT, Assets.BONES_EMOTE,
+				d.getPlayerDungeon().getStatistics().getEnemiesSlain(), HealingItemDatabase.POTION_HEALING.getEmote(),
+				d.getPlayerDungeon().getStatistics().getHealiesConsumed(), Assets.CHEST_EMOTE,
+				d.getPlayerDungeon().getStatistics().getChestsOpened(), Assets.BOOK_EMOTE,
+				d.getPlayerDungeon().getStatistics().getMysteriousBooksRead(), Assets.GOLD_EMOTE,
+				d.getPlayerDungeon().getStatistics().getItemsPurchased(), Assets.AMULET_EMOTE,
+				d.getPlayerDungeon().getReputation(d.getPlayer().getXp())), false)
 			.addField("Gear lost",
-				d.getPlayer().getWeapon().getNameWithEmote() + " and\n" + d.getPlayer().getArmor().getNameWithEmote(),
+				String.format(DEATH_GEAR_LOST_FORMAT, d.getPlayer().getWeapon().getNameWithEmote(),
+					d.getPlayer().getArmor().getNameWithEmote()),
 				false)
 			.build());
-	public static final PreparedDialog<RegionDatabase> NEXT_REGION_PREPARED = new PreparedEmbedDialog<>(r -> EmbedDialog
-			.generateEmbed(Assets.UP_EMOTE + " Welcome to the **" + r.getName() + "**!", Constants.GREEN));
+	public static final PreparedDialog<RegionDatabase> NEXT_REGION_PREPARED = new PreparedEmbedDialog<>(
+			r -> EmbedDialog.generateEmbed(Assets.UP_EMOTE + " Welcome to the **%s**!", r.getName(), Constants.GREEN));
 	public static final PreparedDialog<DungeonInfo> DUNGEON_STATUS_PREPARED = new PreparedEmbedDialog<>(d -> {
-		RegionDatabase region = d.getPlayer().getRegion();
+		RegionDatabase region = d.getPlayerDungeon().getRegion(d.getPlayer().getXp());
 		EmbedBuilder builder = EmbedDialog.setFooterUser(new EmbedBuilder(), d.getAuthor())
 				.setTitle("You are in the " + region.getName())
 				.setColor(Constants.LITHIUM)
 				.setThumbnail(region.getImageUrl())
 				.addField("Stats",
-					"XP: " + Utilities.getXpBar(d.getPlayer()) + "\nHealth: "
-							+ Utilities.displayProgress(d.getPlayer().getHp(), d.getPlayer().getMaxHp(), 16) + " "
-							+ d.getPlayer().getHp() + "/" + d.getPlayer().getMaxHp() + "\nReputation: **"
-							+ d.getPlayer().getReputation() + "**\nGold: **" + d.getPlayer().getGold() + " "
-							+ Assets.GOLD_EMOTE + "**",
+					String.format(DUNGEON_STATS_FORMAT, Utilities.getXpBar(d.getPlayer()),
+						Utilities.displayProgress(d.getPlayerDungeon().getHp(), d.getPlayer().getMaxHp(), 16),
+						d.getPlayerDungeon().getHp(), d.getPlayer().getMaxHp(),
+						d.getPlayerDungeon().getReputation(d.getPlayer().getXp()), d.getPlayer().getGold(),
+						Assets.GOLD_EMOTE),
 					true)
 				.addField(Utilities.getGearField(d));
 
 		if (Dungeon.getBoss(d) != null) {
-			builder.addField("Actions",
-				Assets.BOSS_EMOTE + " **[E]**nter the boss chamber\n" + Assets.INVENTORY_EMOTE + " **[I]**nventory\n"
-						+ Assets.TELEPORT_EMOTE + " **[R]**eturn to castle\n" + Assets.BACK_EMOTE + " **Exit**",
-				false);
+			builder.addField("Actions", String.format(DUNGEON_ACTIONS_BOSS_FORMAT, Assets.BOSS_EMOTE,
+				Assets.INVENTORY_EMOTE, Assets.TELEPORT_EMOTE, Assets.BACK_EMOTE), false);
 		} else {
-			builder.addField("Actions",
-				Assets.GO_EMOTE + " **[E]**xplore\n" + Assets.INVENTORY_EMOTE + " **[I]**nventory\n"
-						+ Assets.TELEPORT_EMOTE + "**[R]**eturn to castle\n" + Assets.BACK_EMOTE + " **Exit**",
-				false);
+			builder.addField("Actions", String.format(DUNGEON_ACTIONS_FORMAT, Assets.GO_EMOTE, Assets.INVENTORY_EMOTE,
+				Assets.TELEPORT_EMOTE, Assets.BACK_EMOTE), false);
 		}
 
 		return builder.build();
 	});
-	public static final PreparedDialog<DungeonInfo> ABANDONED_SHOP_PREPARED = new PreparedEmbedDialog<>(d -> EmbedDialog
-			.setFooterUser(new EmbedBuilder(), d.getAuthor())
-			.setThumbnail(Assets.CLOSED_SHOP_IMAGE)
-			.setTitle(Assets.BONES_EMOTE + " You stumble across an **abandoned shop**!")
-			.setColor(Constants.NONE)
-			.setDescription(
-				"This shop has been abandoned - either because the merchant overlooking it has found another job "
-						+ "or because they have died. The shop might contain dangerous hazards, "
-						+ "but it might also contain leftover gold " + Assets.GOLD_EMOTE + ". Do you want to rob it?")
-			.build());
+	public static final PreparedDialog<DungeonInfo> ABANDONED_SHOP_PREPARED = new PreparedEmbedDialog<>(
+			d -> EmbedDialog.setFooterUser(new EmbedBuilder(), d.getAuthor())
+					.setThumbnail(Assets.CLOSED_SHOP_IMAGE)
+					.setTitle(Assets.BONES_EMOTE + " You stumble across an **abandoned shop**!")
+					.setColor(Constants.NONE)
+					.setDescription(String.format(ABANDONED_SHOP_FORMAT, Assets.GOLD_EMOTE))
+					.build());
 	public static final PreparedDialog<Integer> NEXT_LEVEL_PREPARED = new PreparedEmbedDialog<>(lvl -> EmbedDialog
 			.generateEmbed(Assets.UP_EMOTE + " **Level up!** Welcome to level **" + lvl + "**!", Constants.GREEN));
-	public static final PreparedDialog<Integer> CHEST_PREPARED = new PreparedEmbedDialog<>(keys -> new EmbedBuilder()
-			.setThumbnail(Assets.LOCKED_CHEST_IMAGE)
-			.setTitle(Assets.CHEST_EMOTE + " You stumble across a **locked chest**!")
-			.setColor(Constants.NONE)
-			.setDescription(
-				"This chest appears to be locked, but it could contain some really good loot. To you want to open it, you need a "
-						+ ItemDatabase.KEY.getNameWithEmote()
-						+ ". Do you want to open it? (opening will consume a key)\n\nYou have **" + keys + " "
-						+ Utilities.plural("key", keys) + ItemDatabase.KEY.getEmote() + "**")
-			.build());
+	public static final PreparedDialog<Integer> CHEST_PREPARED = new PreparedEmbedDialog<>(
+			keys -> new EmbedBuilder().setThumbnail(Assets.LOCKED_CHEST_IMAGE)
+					.setTitle(Assets.CHEST_EMOTE + " You stumble across a **locked chest**!")
+					.setColor(Constants.NONE)
+					.setDescription(String.format(CHEST_FORMAT, ItemDatabase.KEY.getNameWithEmote(), keys,
+						Utilities.plural("key", keys), ItemDatabase.KEY.getEmote()))
+					.build());
 	public static final PreparedDialog<Integer> RESURRECTON_PREPARED = new PreparedEmbedDialog<>(
 			ankhs -> new EmbedBuilder().setThumbnail(Assets.RESURRECTION_DEVICE_IMAGE)
 					.setTitle(Assets.RESURRECTION_DEVICE_EMOTE + " You found a resurrection device!")
 					.setColor(Constants.NONE)
-					.appendDescription(
-						"This hourglass-like device appears to be from the era of the War between the Demons. "
-								+ "You might be able to use it to resurrect an ancient being by plugging an **"
-								+ ItemDatabase.ANKH.getNameWithEmote()
-								+ "** into dedicated hole and inverting the bulbs. Do you want to do that?\n\nYou have **"
-								+ ankhs + " " + Utilities.plural("ankh", ankhs) + ItemDatabase.ANKH.getEmote() + "**")
+					.appendDescription(String.format(RESURRECTION_FORMAT, ItemDatabase.ANKH.getNameWithEmote(), ankhs,
+						Utilities.plural("ankh", ankhs), ItemDatabase.ANKH.getEmote()))
 					.build());
+	@SuppressWarnings("null")
 	public static final PreparedDialog<Player> UPGRADE_PREPARED = new PreparedEmbedDialog<>(
-			p -> EmbedDialog.generateEmbed(
-				"What to upgrade?\n" + p.getWeapon().getEmote() + " **[W]**eapon\n" + p.getArmor().getEmote()
-						+ " **[A]**rmor\n" + Assets.BACK_EMOTE + " **Exit** upgrade nothing, don't consume the scroll",
-				Constants.NONE));
-	public static final PreparedDialog<Integer> POTION_EXPERIENCE_GAIN_PREPARED = new PreparedEmbedDialog<>(
+			p -> EmbedDialog.generateEmbed(String.format(SCROLL_UPGRADE_FORMAT, p.getWeapon().getEmote(),
+				p.getArmor().getEmote(), Assets.BACK_EMOTE), Constants.NONE));
+	public static final PreparedDialog<Long> POTION_EXPERIENCE_GAIN_PREPARED = new PreparedEmbedDialog<>(
 			xpgain -> EmbedDialog.generateEmbed(UP_EMOTE + " You gained **" + xpgain + "** XP!", Constants.GREEN));
 	public static final PreparedDialog<Integer> HEALIE_GAIN_PREPARED = new PreparedEmbedDialog<>(
 			hpgain -> EmbedDialog.generateEmbed(UP_EMOTE + " You restored **" + hpgain + " HP**.", Constants.GREEN));
-	public static final PreparedDialog<GameInfo> INVENTORY_STATUS_PREPARED = new PreparedEmbedDialog<>(g -> {
-		EmbedBuilder builder = new EmbedBuilder().setColor(Constants.LITHIUM)
-				.setThumbnail(Assets.BACKPACK_IMAGE)
-				.setTitle(g.getAuthor().getName() + "'s inventory");
+	public static final PreparedDialog<Pair<GameInfo, Predicate<Item>>> INVENTORY_STATUS_PREPARED = new PreparedEmbedDialog<>(
+			data -> {
+				EmbedBuilder builder = new EmbedBuilder().setColor(Constants.LITHIUM)
+						.setThumbnail(Assets.BACKPACK_IMAGE)
+						.setAuthor(data.getLeft().getAuthor().getName() + "'s inventory", null,
+							data.getLeft().getAuthor().getEffectiveAvatarUrl());
 
-		if (g instanceof DungeonInfo)
-			builder.addField("Health", Utilities.displayProgress(g.getPlayer().getHp(), g.getPlayer().getMaxHp(), 20)
-					+ " " + g.getPlayer().getHp() + "/" + g.getPlayer().getMaxHp(),
-				false);
-		// Add health if player is in dungeon
+				if (data.getLeft() instanceof DungeonInfo)
+					builder.addField("Health",
+						Utilities.displayProgress(((DungeonInfo) data.getLeft()).getPlayerDungeon().getHp(),
+							data.getLeft().getPlayer().getMaxHp(), 20) + " "
+								+ ((DungeonInfo) data.getLeft()).getPlayerDungeon().getHp() + "/"
+								+ data.getLeft().getPlayer().getMaxHp(),
+						false);
+				// Add health if player is in dungeon
 
-		Counter c = new Counter(0);
-		builder.addField("Inventory", g.getPlayer().getInventory().getItems().stream().map(is -> {
-			c.count();
-			return "**" + c.getCount() + "** - " + is.getQuantity() + "x " + is.getItem().getNameWithEmote();
-		}).collect(Collectors.joining("\n")), false);
-		// Add a list of items
+				Counter c = new Counter(0);
+				builder.addField("Inventory", data.getLeft().getPlayer().getInventory().getItems().stream().map(is -> {
+					c.count();
+					String itemDisplay = "**" + c.getCount() + "** - " + is.getQuantity() + "x ";
+					if (data.getRight().test(is.getItem())) {
+						itemDisplay += "**" + is.getItem().getNameWithEmote() + "**";
+					} else {
+						itemDisplay += is.getItem().getNameWithEmote();
+					}
+					return itemDisplay;
+					// Bolds the items you can use
+				}).collect(Collectors.joining("\n")), false);
+				// Add a list of items
 
-		builder.addField("Actions",
-			Assets.GO_EMOTE + " **[U]**se\n" + Assets.QUESTION_EMOTE + " **[I]**nfo\n+ Item number\n--OR--\n"
-					+ Assets.BACK_EMOTE + " **Exit**\n_(type in the desired action, "
-					+ "for example `U 1` will use the first item on the list)_",
-			false);
-		// Add a list of actions
+				builder.addField("Actions",
+					String.format(INVENTORY_ACTIONS_FORMAT, Assets.GO_EMOTE, Assets.QUESTION_EMOTE, Assets.BACK_EMOTE),
+					false);
+				// Add a list of actions
 
-		return builder.build();
-	});
+				return builder.build();
+			});
 	public static final PreparedDialog<Integer> INVENTORY_INDEX_NOT_FOUND = new PreparedEmbedDialog<>(
 			index -> EmbedDialog.generateEmbed(
 				"Item number **" + (index + 1) + "** has not been found in your inventory.", Constants.RED));
 	public static final PreparedDialog<ItemStack> ITEM_INFO_PREPARED = new PreparedEmbedDialog<>(is -> {
 		EmbedBuilder builder = new EmbedBuilder().setColor(Constants.NONE)
 				.setTitle(is.getItem().getNameWithEmote())
-				.appendDescription("_" + is.getItem().getDescription() + "_")
+				.appendDescription("_" + is.getItem().getDescription() + "_\n")
 				.setFooter("You have [" + is.getQuantity() + "] of this item.", null);
 
 		if (is.getItem() instanceof HealingItem) {
@@ -359,56 +385,49 @@ public class Assets {
 		return builder.build();
 	});
 	public static final PreparedDialog<Item> ITEM_CANT_USE_PREPARED = new PreparedEmbedDialog<>(item -> EmbedDialog
-			.generateEmbed("You can not use the **" + item.getNameWithEmote() + "** right now.", Constants.NONE));
+			.generateEmbed("**" + item.getNameWithEmote() + "** has no apparent use by itself.", Constants.NONE));
 	public static final PreparedDialog<FightInfo> FIGHT_STATUS_PREPARED = new PreparedEmbedDialog<>(f -> {
 		EmbedBuilder builder = EmbedDialog.setFooterUser(new EmbedBuilder(), f.getAuthor())
 				.setColor(Constants.NONE)
-				.setThumbnail(f.getEnemy().getInfo().getImageUrl());
+				.setThumbnail(f.getPlayerFight().getEnemy().getInfo().getImageUrl());
 
-		if (f.getEnemy().getInfo().isBoss()) {
-			builder.setTitle(Assets.BOSS_EMOTE + f.getEnemy().getInfo().getName() + " has awoken!");
+		if (f.getPlayerFight().getEnemy().getInfo().isBoss()) {
+			builder.setTitle(Assets.BOSS_EMOTE + f.getPlayerFight().getEnemy().getInfo().getName() + " has awoken!");
 		} else {
-			builder.setTitle("A " + f.getEnemy().getInfo().getName() + " has attacked");
+			builder.setTitle("A " + f.getPlayerFight().getEnemy().getInfo().getName() + " has attacked");
 		}
 		// Adds the appropriate title
 
-		String feedString = Combat.trimFeed(f.getFeed(), 6);
+		String feedString = Combat.trimFeed(f.getPlayerFight().getFeed(), 6);
 		if (feedString.length() > 0)
 			builder.setDescription("```diff\n" + feedString + "```");
 		// Appends the feed if it exists
 
 		builder.addField("HP",
-			"You:  " + Utilities.displayProgress(f.getPlayer().getHp(), f.getPlayer().getMaxHp()) + " "
-					+ f.getPlayer().getHp() + "/" + f.getPlayer().getMaxHp() + "\nEnemy: "
-					+ Utilities.displayProgress(f.getEnemy().getHp(), f.getEnemy().getInfo().getMaxHp()) + " "
-					+ f.getEnemy().getHp() + "/" + f.getEnemy().getInfo().getMaxHp(),
+			String.format(COMBAT_STATS_FORMAT,
+				Utilities.displayProgress(f.getPlayerDungeon().getHp(), f.getPlayer().getMaxHp()),
+				f.getPlayerDungeon().getHp(), f.getPlayer().getMaxHp(),
+				Utilities.displayProgress(f.getPlayerFight().getEnemy().getHp(),
+					f.getPlayerFight().getEnemy().getInfo().getMaxHp()),
+				f.getPlayerFight().getEnemy().getHp(), f.getPlayerFight().getEnemy().getInfo().getMaxHp()),
 			true)
 				.addField(Utilities.getGearField(f))
-				.addField("Actions",
-					f.getPlayer().getWeapon().getEmote() + " **[H]**it\n" + Assets.GUARD_EMOTE + " **[G]**uard\n"
-							+ Assets.INVENTORY_EMOTE + " **[I]**nventory\n" + Assets.BONES_EMOTE + "**[S]**urrender\n"
-							+ Assets.BACK_EMOTE + " **Exit**",
-					false);
+				.addField("Actions", String.format(COMBAT_ACTIONS_FORMAT, f.getPlayer().getWeapon().getEmote(),
+					Assets.GUARD_EMOTE, Assets.INVENTORY_EMOTE, Assets.BONES_EMOTE, Assets.BACK_EMOTE), false);
 
 		return builder.build();
 	});
-	public static final PreparedDialog<CommandContext> FIRST_LAUNCH_PREPARED = new PreparedEmbedDialog<>(c -> {
-
-		return EmbedDialog.setAuthorUser(new EmbedBuilder(), c.getUser())
-				.setTitle("Welcome to **LRPG**!")
-				.setThumbnail(RegionDatabase.SEWERS.getImageUrl())
-				.setFooter("Press [C] to continue...", null)
-				.setDescription(
-					"LRPG is a feature-rich Discord dungeon crawler. It features plenty of areas, bosses, enemies, items and unique encounters. "
-							+ "If you ever get stuck or need help, you can always refer to the **" + Assets.MANUAL_EMOTE
-							+ " manual** by running `" + c.getLithium().getConfiguration().getDefaultPrefix()
-							+ "manual` or ask in the [official support server](https://discord.gg/asDUrbR). Because you're new to the game, you get a fistful of "
-							+ Assets.GOLD_EMOTE
-							+ " gold and a bunch of items, so be sure to check that out before you descend into the dungeon."
-							+ "\nEnjoy!")
-				.build();
-
-	});
+	public static final PreparedDialog<CommandContext> FIRST_LAUNCH_PREPARED = new PreparedEmbedDialog<>(
+			c -> EmbedDialog.setAuthorUser(new EmbedBuilder(), c.getUser())
+					.setTitle("Welcome to **LRPG**!")
+					.setThumbnail(RegionDatabase.SEWERS.getImageUrl())
+					.setFooter("Press [C] to continue...", null)
+					.setDescription(String.format(FIRST_LAUNCH_FORMAT, Assets.MANUAL_EMOTE,
+						c.getLithium().getConfiguration().getDefaultPrefix(), Assets.GOLD_EMOTE))
+					.build());
+	public static final PreparedDialog<Item> ITEM_ONLY_DUNGEON_PREPARED = new PreparedEmbedDialog<>(
+			item -> EmbedDialog.generateEmbed(
+				"You can only use the **" + item.getNameWithEmote() + "** when in the dungeon!", Constants.RED));
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EXCEPTIONS "EXCEPTION"
