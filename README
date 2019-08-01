@@ -1,10 +1,5 @@
-//////////////////////////////////////////
-                [WARNING]
-//////////////////////////////////////////
-This branch has been modified since the Discord Hack Week deadline. To see the version that was pushed before the end of the event, please visit https://github.com/markozajc/LRPG/tree/291b3e48508fbd2c29223209158803438852d7b2. LRPG Bot (the one from the invite below) will continue to run the old code for the remainder of the event (until 02/07/2019).
-
 ========= LRPG =========
-LRPG is a semi-roguelike dungeon crawler bot for Discord. It has been developed as a part of the Discord Hack Week competition and falls under the "entertainment" bot category. If you do not want to build it by hand, you can test it out in its official support server (https://discord.gg/asDUrbR) or invite it to your server using https://discordapp.com/oauth2/authorize?client_id=594167165494624287&scope=bot&permissions=280640.
+LRPG is a semi-roguelike dungeon crawler bot for Discord implemented using Lithium. If you do not want to build it by hand, you can check it out in its official support server (https://discord.gg/asDUrbR) or invite it to your server using https://discordapp.com/oauth2/authorize?client_id=594167165494624287&scope=bot&permissions=280640.
 
 Building prequisites======
 You need to ensure several things before you can build LRPG
@@ -47,7 +42,7 @@ Q: What is a resource server
 A: LRPG uses Discord emotes to prettifty various states and dialogs. While it's not necessary for it to be able to do so, it certainly enhances the experience. All of the emotes are stored in a specialized server - you can ask me to add your bot into it by joining the support server mentioned before and pinging/messaging me or by sending me (Marko Zajc#2119) a friend request and sending me a message with the invite link of your bot. Discord unfortunately supports no way to let people without the "Manage Server" permission add bots to guilds, so this is the only way to get your bot in there. If you're not comfortable with this, you can create your own resource server and fill it with the emotes from LRPG/assets/emotes. Do note that you will need to correct all emote references to point to your servers' emotes (some are in Assets, others implement EmotableObject).
 
 Q: What's the difference between semi-roguelike and roguelike?
-A: A roguelike game is a game where you lose ALL of your stuff, essentially erasing your progress. LRPG is semi-roguelike because you still lose equipped gear when you die and you are placed at the start of the dungeon, but you retain your inventory, levels and gold.
+A: A roguelike game is a game where you lose all of your stuff, essentially erasing your progress. LRPG is semi-roguelike because you still lose equipped gear when you die and you are placed at the start of the dungeon, but you retain your inventory, levels and gold. There are also some other smaller differences.
 
 Q: Where are the images (embed thumbnails, not emotes) hosted?
 A: Static images are hosted at https://postimages.org/, animated (gif) enemy sprites are hosted at https://github.com/FallenNationDev/spd-enemies-animated. You can get both at LRPG/assets/images.
