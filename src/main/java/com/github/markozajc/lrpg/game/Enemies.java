@@ -26,12 +26,12 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 @SuppressFBWarnings("PZLA_PREFER_ZERO_LENGTH_ARRAYS")
 public class Enemies {
 
-	private static final String IMGROOT = "https://github.com/markozajc/LRPG/tree/9c43b2b6f51130385571864e4cec77e428cf005d/assets/images/gif";
+	private static final String IMGROOT = "https://raw.githubusercontent.com/markozajc/LRPG/9c43b2b6f51130385571864e4cec77e428cf005d/assets/images/gif";
 
 	private Enemies() {}
 
 	public static interface EnemyInformation extends NamedObject, PicturableObject, ObjectWithReputation,
-			ObjectWithSpeed, AttackDefenseCharacter, IdentifiableObject {
+		ObjectWithSpeed, AttackDefenseCharacter, IdentifiableObject {
 
 		public int getGoldDrop();
 
@@ -132,9 +132,9 @@ public class Enemies {
 		private final String imageUrl;
 
 		private BossInformationDatabase(@Nonnull String name, @Nonnegative int minAttack, @Nonnegative int maxAttack, // NOSONAR
-				@Nonnegative float attackSpeed, @Nonnegative int minDefense, @Nonnegative int maxDefense,
-				@Nonnegative long reputation, @Nonnegative int xp, @Nonnegative int maxHp, @Nonnegative int goldDrop,
-				@Nullable Supplier<ItemRarityPack> drops, @Nonnull String imageUrl) {
+			@Nonnegative float attackSpeed, @Nonnegative int minDefense, @Nonnegative int maxDefense,
+			@Nonnegative long reputation, @Nonnegative int xp, @Nonnegative int maxHp, @Nonnegative int goldDrop,
+			@Nullable Supplier<ItemRarityPack> drops, @Nonnull String imageUrl) {
 			this.name = name;
 			this.attack = new RangedValue(minAttack, maxAttack);
 			this.defense = new RangedValue(minDefense, maxDefense);
@@ -302,7 +302,7 @@ public class Enemies {
 		private final String imageUrl;
 
 		private RegionDatabase(@Nonnull String name, @Nonnegative int reputation, @Nonnull BossDatabase boss,
-				@Nonnull String imageUrl) {
+			@Nonnull String imageUrl) {
 			this.name = name;
 			this.reputation = reputation;
 			this.boss = boss;
@@ -374,8 +374,8 @@ public class Enemies {
 		private final RangedValueObject defense;
 
 		private EnemyDatabase(@Nonnull String name, @Nonnegative int minAttack, @Nonnegative int maxAttack, // NOSONAR
-				@Nonnegative float attackSpeed, @Nonnull RegionDatabase region, @Nonnegative long reputationOffset,
-				@Nonnegative int xp, @Nonnegative int maxHp, @Nonnegative int goldDrop, @Nonnull String imageUrl) {
+			@Nonnegative float attackSpeed, @Nonnull RegionDatabase region, @Nonnegative long reputationOffset,
+			@Nonnegative int xp, @Nonnegative int maxHp, @Nonnegative int goldDrop, @Nonnull String imageUrl) {
 			this.name = name;
 			this.attack = new RangedValue(minAttack, maxAttack);
 			this.attackSpeed = attackSpeed;
@@ -469,15 +469,14 @@ public class Enemies {
 
 				fight.getPlayerDungeon().getStatistics().enemySlain();
 				fight.getPlayer()
-						.setGold(
-							fight.getPlayer().getGold() + fight.getPlayerFight().getEnemy().getInfo().getGoldDrop());
+					.setGold(fight.getPlayer().getGold() + fight.getPlayerFight().getEnemy().getInfo().getGoldDrop());
 				fight.getPlayer()
-						.setXp(fight.getPlayer().getXp() + fight.getPlayerFight().getEnemy().getInfo().getXpDrop());
+					.setXp(fight.getPlayer().getXp() + fight.getPlayerFight().getEnemy().getInfo().getXpDrop());
 
 				fight.getChannel()
-						.sendMessage(Combat.getVictoryStatus(fight.getPlayerFight().getEnemy(), feed,
-							item == null ? null : item))
-						.queue();
+					.sendMessage(
+						Combat.getVictoryStatus(fight.getPlayerFight().getEnemy(), feed, item == null ? null : item))
+					.queue();
 
 				if (fight.getPlayerFight().getEnemy().getInfo().isBoss()) {
 					RegionDatabase region = fight.getPlayerDungeon().getRegion(fight.getPlayer().getXp());
@@ -487,7 +486,7 @@ public class Enemies {
 
 				Utilities.sleep(1000);
 				fight.getPlayerDungeon()
-						.setHp(fight.getPlayerDungeon().getHp() + Dungeon.TURN_HEAL, fight.getPlayer().getMaxHp());
+					.setHp(fight.getPlayerDungeon().getHp() + Dungeon.TURN_HEAL, fight.getPlayer().getMaxHp());
 
 			} else {
 				fight.getPlayerDungeon().setHp(0, fight.getPlayer().getMaxHp());
